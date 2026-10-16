@@ -1,56 +1,69 @@
 # Publication status — 2026-10-17
 
-Website: https://hiroyukiyamamoto.github.io/loadings-mcp/ . Cloud Run is **deployed privately and passes authenticated MCP tests**. Anonymous access remains disabled; `docs/config.json` intentionally remains null. Public transport safeguards and final publication approval are still required.
+**Public and verified without authentication.** Website: https://hiroyukiyamamoto.github.io/loadings-mcp/ .
 
-## Running service
+MCP endpoint: **https://loadings-mcp-121643671058.asia-northeast1.run.app/mcp** . Streamable HTTP; no sign-up, API key or OAuth required. Manual ChatGPT/Claude connection tests remain unverified.
 
-- Project: `stable-century-479407-m7`; region: `asia-northeast1`.
-- Service: `loadings-mcp`; serving revision: `loadings-mcp-00002-ng4` (100% traffic).
-- Endpoint: `https://loadings-mcp-121643671058.asia-northeast1.run.app/mcp` — requires a Cloud Run IAM identity token, not a public ChatGPT/Claude endpoint.
-- Runtime identity: `loadings-mcp-runtime@stable-century-479407-m7.iam.gserviceaccount.com`. Created under explicit approval; no project roles were granted, and project IAM lookup found none for this identity.
-- Service IAM has no anonymous/allAuthenticatedUsers binding. Anonymous MCP POST returned HTTP 403.
-- CPU 1; memory 512 MiB; concurrency 1; request-based CPU allocation; timeout 30s; service/revision max 1; minimum 0. Built-in startup CPU boost remains enabled. Native memory distribution sample mean was 53.18% (~272 MiB); this is not peak memory or a maximum-input sizing guarantee.
+## Running configuration
 
-## Numerical precision correction
+| Setting | Value |
+| --- | --- |
+| Project / region | stable-century-479407-m7 / asia-northeast1 |
+| Service / revision | loadings-mcp / loadings-mcp-00003-nbv, 100% traffic |
+| Identity | loadings-mcp-runtime@stable-century-479407-m7.iam.gserviceaccount.com, no project roles granted |
+| Access | allUsers -> roles/run.invoker on this service only; no project-wide public grant |
+| Resources | 1 CPU, 512 MiB; request-based CPU allocation; startup CPU boost enabled |
+| Scaling | minimum 0, service/revision maximum 1, concurrency 1 |
+| Time limits | worker killed after 20s; proxy response timeout 25s; Run request timeout 30s |
+| HTTP limits | body <=2 MiB; shared 60 requests/minute per instance, burst 10; only /mcp proxied |
+| Cost protection | JPY 400/month Run cap CONFIGURED; separate JPY 500/month project alerts-only budget |
 
-The first private deployment using the prior validated image initialized successfully but **failed** the end-to-end demo-to-PCA test. The pinned mcptools structured-content serializer rounded numbers to four decimal places; 29 fasting-metabolome columns became zero/constant. Previous HTTP checks supplied local data and missed that output round trip.
+The user explicitly approved using the shared project, including the cap's effect on the existing 23 services, then private deployment and finally public access. Only loadings-mcp was created/deployed and given anonymous invocation; other service configurations/IAM were not changed. The cap itself applies to all Cloud Run usage in this project.
 
-The wrapper now returns full-precision JSON through official `ellmer::ContentText`. No MCP implementation or package internals were patched; loadings and the analysis algorithms are unchanged. Regression tests compare every fasting/whhl input number after HTTP transfer and compare PCA scores and p-values with the local official result. The example input JSON generator also preserves small values. Clients parse `result.content[0].text`; `structuredContent` is intentionally absent.
-
-A single cached repair build succeeded: `4a1269de-3346-46d7-a971-c4690d0e1011`, Tokyo, elapsed about 76s (300s configured deadline). The initial no-rebuild plan was revised because the real deployment test found this defect. No new paid service/API or project role was added for the build. Build/Registry charges are outside the Run cap; actual invoiced build cost is unverified.
-
-Deployed immutable image:
+Deployed image:
 
 ```text
-asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:6e4ff45500b6129f7d5d765de309c092ee0d140b15d6e5128fb14add2c3798f8
+asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:e5459735ca1517992fab4e3af031027187cbb7d7bf73e75811f96d5d23c65525
 ```
 
-PowerShell executed the exact gcloud deployment flags documented in `scripts/deploy.sh`, after running its spend-cap verifier separately. Other 23 Run services were not redeployed or given new IAM policies. The user separately approved their inclusion in the shared project's cap.
+Guarded image build `339abc73-567e-445f-8bde-71cd590c15d0` succeeded in about 97s, with a 300s deadline and existing cache. No new Google paid service was introduced; nginx runs in the same container. Registry/Build charges remain outside the Run cap. Actual invoice costs are unverified.
 
-## Actual checks
+## Verification
 
-Authenticated test at 2026-10-17 00:18 JST (report also records UTC):
+Anonymous official R MCP client test: 2026-10-17 00:39 JST, negotiated protocol 2025-06-18. Detailed reports stay in ignored test-results files; no tokens are printed or saved.
 
 | Check | Result |
 | --- | --- |
-| Initialize | PASS, negotiated 2025-06-18 |
-| tools/list | PASS: demo_data, analyze_pca, analyze_model, analyze_multiset; no arbitrary-code/session tools |
-| fasting demo -> PCA | PASS, 10 x 282; source numbers retained; first two variance ratios ~40.10%, 15.49% |
-| analyze_model | PASS: OS-PCA, PLS-ROG, PLS-DA, RCCA-DA |
-| analyze_multiset | PASS: multiset PLS, multiset PLS-ROG, unsupervised multiset PLS; all four whhl tissue blocks |
-| Analysis HTTP duration | ~0.53–1.88s per successful analysis call in this run; not a cold-start or worst-case guarantee |
-| Invalid constant-column input | PASS: ok=false, analysis_error |
-| Malformed JSON | PASS: HTTP 400 |
-| Unknown method / recovery | PASS: -32601; subsequent initialize succeeds |
-| Anonymous invocation | PASS: HTTP 403 (private) |
-| ChatGPT / Claude Desktop / Claude Code | Manual tests UNVERIFIED; Claude Code CLI unavailable locally |
-| Public body/rate/hard computation limits | NOT IMPLEMENTED; anonymous publication remains blocked |
-| Invoice / cap enforcement event | UNVERIFIED; cap configuration is verified, not an invoice ceiling |
+| Initialize / tools/list | PASS; exactly demo_data, analyze_pca, analyze_model, analyze_multiset |
+| fasting demo -> PCA | PASS, 10 samples x 282 metabolites, full numeric precision; variance ratios ~40.10%, 15.49% |
+| Single-dataset models | PASS: OS-PCA, PLS-ROG, PLS-DA, RCCA-DA |
+| Multiset models | PASS: multiset PLS, multiset PLS-ROG, unsupervised multiset PLS, all four whhl tissues |
+| Invalid constant column | PASS: structured analysis_error |
+| Anonymous invocation | PASS: HTTP 200 |
+| Invalid JSON / unknown method | PASS: HTTP 400 / MCP -32601; subsequent initialize recovers |
+| Body / request rate | PASS on the actual guarded endpoint: HTTP 413 / 429 and recovery after cooldown |
+| Worker deadline | PASS locally and in Linux CI: a long-running child is terminated, arbitrary dispatch rejected, subsequent PCA succeeds |
+| Upper input boundaries | All 8 methods returned successful JSON at 50,000 single-matrix or 100,000 combined multiset cells; representative boundary cases, not every shape |
+| Memory | Guarded revision distribution sample means up to ~62.6% (~321 MiB) during private boundary checks; not a peak guarantee |
+| Linux R / Docker CI | PASS: [run 38924893476](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38924893476), including worker and nginx body/rate tests |
+| Manual ChatGPT / Claude | UNVERIFIED; Claude Code CLI unavailable locally |
 
-Scripts: `scripts/smoke-remote.R`, `scripts/check-remote-http.R`. Detailed JSON and measured deployment settings stay in ignored `test-results/`; identity tokens are neither printed nor saved. Local HTTP precision regression and static-site checks also pass. Cloud Run runs the repaired Linux Docker image successfully.
+Anonymous demo analysis calls took about 1.33–5.29s in the official R client. Boundary request timings also include client JSON encoding/upload; they are distinct from the worker's computation deadline. Rate counters reset on instance replacement, and Cloud Run maximum instances is not an absolute bill ceiling.
 
-## Cost protection and next steps
+Scripts: scripts/smoke-remote.R, scripts/check-remote-http.R, scripts/check-capacity.R, scripts/check-limits.R, tests/worker.R. Use MCP_ENDPOINT and omit CLOUD_RUN_ID_TOKEN for public tests. The capacity script uses raw HTTP to avoid expensive large-schema conversion in the official R client; the demo suite tests the official client separately.
 
-The JPY 400 monthly Run cap is CONFIGURED; the JPY 500 project-wide budget is alerts-only. Existing JPY 10,000 account budget is unchanged. **All existing Cloud Run services in this project are included**; existing usage can exhaust the cap. Enforcement delays, other services, storage, networking and taxes prevent a guaranteed JPY 500 total. Never lift a cap automatically to complete a test. See [operations and emergency stop](OPERATIONS.md).
+## Numerical precision repair
 
-Next: implement and privately test pre-parser body limits, a killable computation deadline, bounded request admission and maximum-input behavior. Then present the tested public configuration and risks for separate final anonymous-access approval. Only after approval and successful anonymous MCP tests should the actual endpoint and free best-effort access terms be placed in the site's config. No public IAM change is part of the completed private-deployment authorization.
+The first private image initialized but failed demo-to-PCA: pinned mcptools rounded ordinary structured-content numbers to four decimals, making 29 fasting columns zero/constant. This was corrected with official ellmer::ContentText carrying full-precision JSON. Clients parse result.content[0].text; structuredContent is intentionally absent. All fasting/whhl input values and PCA scores/p-values now have HTTP regression tests. loadings and the analysis algorithms were not modified. The cached repair build before the guarded release was 4a1269de-3346-46d7-a971-c4690d0e1011 (~76s).
+
+## Costs and emergency stop
+
+**JPY 500/month is a target, not a guaranteed total invoice cap.** JPY 400 is the Cloud Run stop threshold across this shared project's existing and new services; JPY 500 is a notification only. Enforcement is delayed, in-flight usage can finish, and Build/Registry/Logging/network/tax charges can remain. The existing JPY 10,000 account-wide notification was left unchanged. Antigravity's AI plan/credits are outside this Run cap.
+
+To remove public access from only this service:
+
+```sh
+gcloud run services remove-iam-policy-binding loadings-mcp --project stable-century-479407-m7 --region asia-northeast1 --member=allUsers --role=roles/run.invoker
+```
+
+Then verify anonymous requests are rejected. For further isolation/deletion procedures and budget IDs, see [OPERATIONS.md](OPERATIONS.md). Never automatically lift an enforced spend cap.

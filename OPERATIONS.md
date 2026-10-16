@@ -1,6 +1,6 @@
 # Cost control and operations
 
-Updated 2026-10-17 (Asia/Tokyo). **The MCP endpoint is deployed privately and authenticated tests pass; anonymous access is disabled.** Following explicit approval to include all existing Cloud Run services, the existing project is retained, Budget API was enabled, and the two budgets below were created and read back. No new project or billing link was created. The role-free runtime identity and private service were subsequently created under explicit approval; no public IAM change was made. GitHub Pages remains public.
+Updated 2026-10-17 (Asia/Tokyo). **The guarded MCP endpoint is public and anonymous tests pass.** Following explicit approval to include all existing Cloud Run services, the existing project is retained, Budget API was enabled, and the two budgets below were created and read back. No new project or billing link was created. The role-free runtime identity and private service were subsequently created under explicit approval; the user subsequently requested public access, and allUsers invocation was granted on loadings-mcp only. GitHub Pages remains public.
 
 ## Observed environment
 
@@ -76,9 +76,9 @@ gcloud run deploy loadings-mcp --project stable-century-479407-m7 --region asia-
 
 Immediately before creation, confirm the name is still unused. Test cold start, memory, initialize, tools/list, all four tools/eight methods, invalid input and JSON using `scripts/smoke-remote.R` with an identity token. HTTP/R-client success is separate from manual ChatGPT/Claude success. Stop if the cap cannot be verified; never lift it to complete tests.
 
-Before public approval, add/test pre-parser body limits, an actual computation deadline (killable worker), bounded request admission and failure/recovery tests. These are **not implemented yet**. Cloud Run timeout returns 504 but does not kill computation. In-process throttling resets on restart and does not provide a durable monthly limit. [Timeout behavior](https://docs.cloud.google.com/run/docs/configuring/request-timeout)
+Before public approval, add/test pre-parser body limits, an actual computation deadline (killable worker), bounded request admission and failure/recovery tests. These controls are now implemented and tested in the guarded release; see DEPLOYMENT.md. Cloud Run timeout returns 504 but does not kill computation. In-process throttling resets on restart and does not provide a durable monthly limit. [Timeout behavior](https://docs.cloud.google.com/run/docs/configuring/request-timeout)
 
-Present measured results and remaining risks, obtain separate final approval for anonymous invocation on **only loadings-mcp**, repeat tests anonymously, and only then publish the actual /mcp endpoint and free best-effort service limits on Pages. No public invocation has been enabled.
+Present measured results and remaining risks, obtain separate final approval for anonymous invocation on **only loadings-mcp**, repeat tests anonymously, and only then publish the actual /mcp endpoint and free best-effort service limits on Pages. Public invocation was subsequently approved and enabled only for loadings-mcp; anonymous tests pass.
 
 ## Measurements and verification
 
@@ -122,3 +122,7 @@ gcloud run services delete loadings-mcp --project stable-century-479407-m7 --reg
 ```
 
 Do not disable billing on the shared project or lift a cap automatically. Deleting the service does not remove image/log/build-source storage charges. Restoration needs an approved redeploy or ingress change, valid cost protection and fresh connectivity tests. Spend caps reset monthly and can resume service automatically; emergency internal ingress persists until explicitly changed. Update the site's service status if suspended.
+
+## Antigravity and the two amounts
+
+The configured **JPY 400 stop threshold applies only to Cloud Run in this project**, regardless of whether Codex, Antigravity or another tool deployed the application. The **JPY 500 project budget sends notifications only** and does not stop other services. Antigravity's individual AI subscription/credits and enterprise model consumption are outside this Run-only cap. Individual users can set AI Credit Overages to Never to prevent automatic credit use beyond baseline quota; the user's Antigravity plan/settings have not been inspected or changed. [Official Antigravity plans](https://antigravity.google/docs/plans)

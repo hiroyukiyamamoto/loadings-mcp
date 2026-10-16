@@ -1,3 +1,4 @@
 {
-  "endpoint": null
+  "endpoint": "https://loadings-mcp-121643671058.asia-northeast1.run.app/mcp",
+  "authentication": "none"
 }
