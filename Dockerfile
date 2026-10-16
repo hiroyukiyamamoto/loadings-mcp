@@ -1,6 +1,6 @@
 FROM rocker/r-ver:4.5.2
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    ca-certificates git make cmake libcurl4-openssl-dev libssl-dev libxml2-dev \
+    ca-certificates git make cmake pkg-config libcurl4-openssl-dev libssl-dev libxml2-dev libuv1-dev zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 WORKDIR /app
 COPY scripts/install.R scripts/install.R

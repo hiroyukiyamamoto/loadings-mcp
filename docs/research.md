@@ -23,7 +23,7 @@ Sources: [CRAN](https://cran.r-project.org/package=loadings), [manual](https://c
 | multipls_rog(X,Y,tau,D,kappa) / multiplsrog_loading(multiplsrog) | multiset data, groups, weights, differential, smoothing / fit | multiset fit / loading tests |
 | unsv_multipls(X,tau) / unsvmultipls_loading(unsvmultipls) | multiset data and weights / fit | multiset fit / loading tests |
 
-The first nine functions are used by this project; other documented algorithms are inventoried but not exposed in this MVP. The package also has a generalized eigenvalue helper; it is not an analysis tool here. Built-in datasets: antibiotic, covid19, fasting, greentea, turnover, whhl. No package function named PCA is invented: PCA uses base R stats::prcomp as in the package examples.
+The PCA, OS-PCA, PLS-DA, PLS-ROG and RCCA-DA function pairs are used by this project; other documented algorithms are inventoried but not exposed in this MVP. The package also has an internal `.generalized_eigen_symmetric(A,B)` helper for square matrices with positive definite B, returning values and vectors; it is not an exposed analysis tool. Built-in datasets: antibiotic, covid19, fasting, greentea, turnover, whhl. No package function named PCA is invented: PCA uses base R stats::prcomp as in the package examples.
 
 ## mcptools
 
