@@ -2,5 +2,6 @@
 !Dockerfile
 !scripts/
 !scripts/install.R
+!scripts/start.sh
 !R/
 !R/**

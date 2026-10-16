@@ -1,0 +1,10 @@
+if(dir.exists(".library")) .libPaths(c(normalizePath(".library"),.libPaths()))
+source("R/utils.R");source("R/analysis.R");source("R/worker.R")
+started <- proc.time()[["elapsed"]]
+timed_out <- isolated_worker(function() Sys.sleep(60),list(),timeout=.1)
+stopifnot(!timed_out$ok,timed_out$error$code=="computation_timeout",proc.time()[["elapsed"]]-started<5)
+recovered <- run_bounded_analysis("analyze_pca",list(x=demo_data()$x,components=2L))
+stopifnot(recovered$ok,recovered$scores$total_rows==10L)
+invalid <- try(run_bounded_analysis("eval",list()),silent=TRUE)
+stopifnot(inherits(invalid,"try-error"))
+cat("Worker deadline terminates execution, rejects arbitrary dispatch, and recovers.\n")

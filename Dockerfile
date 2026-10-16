@@ -5,9 +5,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 WORKDIR /app
 COPY scripts/install.R scripts/install.R
 RUN Rscript --vanilla scripts/install.R
+RUN apt-get update && apt-get install -y --no-install-recommends nginx-light \
+    && rm -rf /var/lib/apt/lists/*
 COPY R R
+COPY scripts/start.sh scripts/start.sh
+RUN sed -i 's/\r$//' scripts/start.sh
 RUN useradd --create-home --uid 10001 mcp && chown -R mcp:mcp /app
 USER mcp
 ENV PORT=8080
 EXPOSE 8080
-CMD ["Rscript", "--vanilla", "R/server.R"]
+CMD ["bash", "scripts/start.sh"]

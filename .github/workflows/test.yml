@@ -13,6 +13,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libuv1-dev zlib1g-dev pkg-config cmake
       - run: Rscript --vanilla scripts/install.R
       - run: Rscript --vanilla tests/spend-cap.R
+      - run: Rscript --vanilla tests/worker.R
       - run: Rscript --vanilla tests/models.R
       - run: Rscript --vanilla tests/multiset.R
       - run: Rscript --vanilla tests/http.R
@@ -35,3 +36,7 @@ jobs:
           done
           docker logs mcp
           exit 1
+      - name: Verify HTTP body and burst limits
+        run: |
+          docker cp scripts/check-limits.R mcp:/tmp/check-limits.R
+          docker exec -e MCP_ENDPOINT=http://127.0.0.1:8090/mcp mcp Rscript --vanilla /tmp/check-limits.R

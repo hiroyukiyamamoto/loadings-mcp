@@ -1,6 +1,6 @@
 # MCP tool API, schema 1.0
 
-Transport: official mcptools HTTP, POST `/mcp`. Session tools disabled. All data remain in the serving R process for computation; there is no persistence or model registry.
+Transport: official mcptools HTTP, POST `/mcp`. Session tools disabled. Each call runs in a separate, disposable R worker with a 20-second deadline; there is no persistence or model registry. The Docker entrypoint places nginx in front of the official transport: maximum body 2 MiB (HTTP 413), 60 requests/minute per instance shared by all users with burst 10 (HTTP 429), and 25-second upstream response timeout. Rate counters reset on instance replacement and are not a durable monthly usage cap. Direct `R/server.R` development startup omits the nginx HTTP limits; use Docker for public hosting.
 
 ## Tools
 

@@ -36,6 +36,8 @@ Dependencies install into `.library/`, isolated from user libraries. loadings is
 
 The server binds `0.0.0.0`, uses `PORT` (default 8080), and serves Streamable HTTP at `/mcp`. Upstream mcptools accepts other paths too; `/mcp` is the documented client endpoint. HTTP GET returns 405; use an MCP POST client, not a browser page, to test it. Built-in session discovery tools are explicitly disabled.
 
+The production Docker entrypoint adds nginx HTTP limits before JSON parsing: 2 MiB per body and 60 requests/minute shared across users, with burst 10. Excess requests return 413/429. Only `/mcp` is proxied. Each tool call runs in a disposable R subprocess terminated after 20 seconds; nginx waits up to 25 seconds and Cloud Run up to 30. The direct R development command omits the nginx limits. These controls do not guarantee a total bill ceiling or prevent all denial-of-service traffic.
+
 ## Connect clients
 
 Claude Code local development:

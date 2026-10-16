@@ -1,6 +1,7 @@
 if (dir.exists(".library")) .libPaths(c(normalizePath(".library"), .libPaths()))
 source("R/utils.R")
 source("R/analysis.R")
+source("R/worker.R")
 source("R/tools.R")
 port <- suppressWarnings(as.numeric(Sys.getenv("PORT", "8080")))
 port <- scalar_integer(port, "PORT", 1L, 65535L)
