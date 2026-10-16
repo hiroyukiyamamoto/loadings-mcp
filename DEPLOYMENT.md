@@ -16,9 +16,41 @@ Existing Docker repository: `asia-northeast1-docker.pkg.dev/stable-century-47940
 
 Cloud Build: `38f54dcf-a949-4090-988b-d883ae701654`, region asia-northeast1. Source submission is restricted by `.gcloudignore` to the Dockerfile, Docker ignore file, R code and installer; local credentials, R libraries and browser profiles are excluded. The build uses the existing Cloud Build identity and existing source bucket; no permissions were added.
 
+Build result: **SUCCESS**. Immutable image:
+
+```text
+asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:69f4024f7b7f09c812fe5ae0e385ef6ba3e06b0d4857ff3a82ad28dd3bae3871
+```
+
 Cloud Run deployment and IAM changes are **pending explicit approval**. The planned runtime identity is a dedicated `loadings-mcp-runtime` service account without project roles. The proposal is to create that identity, deploy loadings-mcp privately using an immutable image digest, and (only if approved) grant `allUsers` the `roles/run.invoker` role on this new service.
 
 Planned limits: service and revision min=0/max=1, concurrency=1, 1 vCPU, 1 GiB RAM, request-based CPU allocation, 120-second request timeout. No existing service is updated.
+
+### Exact commands awaiting approval
+
+These commands have **not** been executed. Creation of the dedicated identity and the new service's IAM changes require approval. No project roles are granted to the runtime identity.
+
+```sh
+export GOOGLE_CLOUD_PROJECT=stable-century-479407-m7
+export IMAGE=asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:69f4024f7b7f09c812fe5ae0e385ef6ba3e06b0d4857ff3a82ad28dd3bae3871
+export RUNTIME_SERVICE_ACCOUNT=loadings-mcp-runtime@stable-century-479407-m7.iam.gserviceaccount.com
+
+gcloud iam service-accounts create loadings-mcp-runtime \
+  --project "$GOOGLE_CLOUD_PROJECT" --display-name='loadings MCP runtime'
+
+# The existing scripts/deploy.sh will execute this command after confirmation:
+gcloud run deploy loadings-mcp --project "$GOOGLE_CLOUD_PROJECT" --region asia-northeast1 \
+  --image "$IMAGE" --service-account "$RUNTIME_SERVICE_ACCOUNT" --no-allow-unauthenticated \
+  --port 8080 --concurrency 1 --cpu 1 --memory 1Gi --cpu-throttling --timeout 120 \
+  --min 0 --max 1 --min-instances 0 --max-instances 1
+
+# Only after the private deployment passes authenticated MCP tests:
+gcloud run services add-iam-policy-binding loadings-mcp \
+  --project "$GOOGLE_CLOUD_PROJECT" --region asia-northeast1 \
+  --member=allUsers --role=roles/run.invoker
+```
+
+After the final command, repeat the MCP tests anonymously. Only on success set `docs/config.json` to the actual /mcp URL and publish the updated site. Re-check that the service name is unused immediately before creating the service; stop if another deployment has appeared.
 
 ## Security and operational limits
 
