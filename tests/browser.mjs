@@ -54,12 +54,13 @@ try {
     for (let attempt=0;attempt<80;attempt++) {
       await evaluate(`document.querySelectorAll('img').forEach(image=>image.loading='eager')`);
       state = await evaluate(`({ready:document.readyState,title:document.title,endpoint:document.getElementById('endpoint')?.textContent,overflow:document.documentElement.scrollWidth>innerWidth,brokenAnchors:[...document.querySelectorAll('a[href^="#"]')].filter(a=>a.hash&& !document.getElementById(a.hash.slice(1))).map(a=>a.hash),images:[...document.images].map(i=>({src:i.src,loaded:i.complete&&i.naturalWidth>0}))})`);
-      if (state?.ready === 'complete' && state.endpoint && state.images.every(i=>i.loaded)) break;
+      if (state?.ready === 'complete' && state.endpoint && !state.endpoint.startsWith('Loading ') && state.images.every(i=>i.loaded)) break;
       // Loading=lazy images need scrolling into view for verification.
       await evaluate(`document.getElementById('examples')?.scrollIntoView()`);
       await new Promise(done=>setTimeout(done,200));
     }
     assert(state.title.startsWith('loadings MCP'));
+    assert(!state.endpoint.startsWith('Loading '),`${label}: endpoint configuration still loading`);
     assert.equal(state.overflow,false,`${label}: horizontal overflow`);
     assert.deepEqual(state.brokenAnchors,[]);
     assert(state.images.every(i=>i.loaded),`${label}: broken image`);
