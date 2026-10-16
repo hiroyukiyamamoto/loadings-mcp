@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import {readFileSync, existsSync} from 'node:fs';
+const html = readFileSync('docs/index.html','utf8');
+for (const id of ['overview','features','tools','start','examples','documentation','references','about']) assert(html.includes(`id="${id}"`));
+for (const [,src] of html.matchAll(/(?:src|href)="([^"#]+)"/g)) if (!/^https?:/.test(src)) assert(existsSync(`docs/${src}`), src);
+const endpoint = JSON.parse(readFileSync('docs/config.json')).endpoint;
+assert(endpoint === null || (/^https:\/\//.test(endpoint) && new URL(endpoint).pathname.endsWith('/mcp')));
+const result = JSON.parse(readFileSync('docs/data/iris-pca.json'));
+assert.equal(result.ok,true); assert.equal(result.scores.returned_rows,150);
+assert(html.includes('name="viewport"')); assert(!html.includes('.run.app'));
+console.log('Static site assets, sections, viewport, demo output and pending endpoint passed.');
