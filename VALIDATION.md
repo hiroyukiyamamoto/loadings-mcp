@@ -2,9 +2,11 @@
 
 Development date: 2026-10-16 (Asia/Tokyo). No Cloud Run deployment, IAM changes, GitHub Pages settings changes or Pages publication performed.
 
+Final implementation commit `5b181fd` passed both Linux R and Docker jobs in [GitHub Actions run 38888286171](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38888286171). Later validation-documentation-only commits do not change the tested implementation.
+
 | Check | Result |
 | --- | --- |
-| R package installation | PASS on Windows R 4.4.0 with Rtools: loadings 0.6.1, ellmer 0.5.0, httr2 1.3.0, nanonext 1.10.3, pinned mcptools 1.0.3.9000 |
+| R package installation | PASS on Windows R 4.4.0 with Rtools and Linux R 4.5.2 CI: loadings 0.6.1, ellmer 0.5.0, httr2 1.3.0, pinned mcptools 1.0.3.9000. Windows nanonext 1.10.3. |
 | PCA MVP first | PASS before adding other methods: numeric comparison with official functions, truncation and invalid inputs |
 | All five methods | PASS: local demo analysis and loading result comparison with official functions |
 | HTTP server startup | PASS: child R process, validated PORT, /mcp endpoint |
@@ -18,5 +20,9 @@ Development date: 2026-10-16 (Asia/Tokyo). No Cloud Run deployment, IAM changes,
 | Cloud Run external MCP client | UNVERIFIED: deployment requires explicit approval, project/image and authentication decision |
 | ChatGPT / Claude Desktop / Claude Code | Official connection methods documented; manual client tests UNVERIFIED |
 | GitHub Pages deployment | UNVERIFIED: manual workflow ready; publication/settings require explicit approval |
+
+All R analysis/HTTP checks, artifact generation and static-site checks also passed in Linux CI. Initial CI found missing libuv/zlib development headers in the image and a GitHub API credential problem in the R runner. These were fixed by adding system libraries, verifying installed mcptools during image construction, and downloading the pinned public source archive directly. Both final jobs passed after these corrections.
+
+GitHub independently started legacy `pages-build-deployment` runs on pushes. These were cancelled before publication; repository Pages settings were not changed. Review the existing source setting before future pushes or an approved publication.
 
 Initial installation emitted Windows locale startup warnings and a remotes tar extraction warning, but installation completed and exact pinned versions loaded successfully. These are separate from analysis warnings. Transitive CRAN versions are not fully locked; preserve production image digest for artifact reproducibility.
