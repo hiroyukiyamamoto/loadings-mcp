@@ -4,15 +4,17 @@ Development/publication date: 2026-10-16 (Asia/Tokyo). GitHub Pages is now publi
 
 Final implementation commit `5b181fd` passed both Linux R and Docker jobs in [GitHub Actions run 38888286171](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38888286171). Later validation-documentation-only commits do not change the tested implementation.
 
+The current metabolome/multiset extension `e0a9279` also passed both jobs in [run 38914299181](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38914299181), including all three new multiset methods and four-tool HTTP discovery/execution. [Pages run 38914326566](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38914326566) published the simpler site. Live desktop/mobile browser checks passed again with all three metabolome figures; the fasting/whhl JSON files, figures and updated API document returned HTTP 200.
+
 | Check | Result |
 | --- | --- |
 | R package installation | PASS on Windows R 4.4.0 with Rtools and Linux R 4.5.2 CI: loadings 0.6.1, ellmer 0.5.0, httr2 1.3.0, pinned mcptools 1.0.3.9000. Windows nanonext 1.10.3. |
 | PCA MVP first | PASS before adding other methods: numeric comparison with official functions, truncation and invalid inputs |
 | Single-dataset methods | PASS: all five methods on full fasting metabolome data, including official loading-result comparison and nonfinite-value handling |
 | HTTP server startup | PASS: child R process, validated PORT, /mcp endpoint |
-| Multiset methods | PASS locally: multiset PLS, multiset PLS-ROG and unsupervised multiset PLS on full matched whhl blocks; direct official loading-result comparison including the final tissue block |
-| Official MCP client discovery | PASS locally: mcptools::mcp_tools, exactly four intended tools, no session/code execution tools |
-| Official MCP client execution | PASS locally: fasting PCA, truncation, invalid input, four single-dataset models, whhl demo and all three multiset models |
+| Multiset methods | PASS on Windows and Linux CI: multiset PLS, multiset PLS-ROG and unsupervised multiset PLS on full matched whhl blocks; direct official loading-result comparison including the final tissue block |
+| Official MCP client discovery | PASS on Windows and Linux CI: mcptools::mcp_tools, exactly four intended tools, no session/code execution tools |
+| Official MCP client execution | PASS on Windows and Linux CI: fasting PCA, truncation, invalid input, four single-dataset models, whhl demo and all three multiset models |
 | Demo artifacts | PASS: full packaged fasting input/PCA output, 282-metabolite loading plot, sample score plot, four-tissue whhl multiset result and score panels |
 | Static site | PASS: section, relative asset/link, viewport and endpoint placeholder checks; JavaScript syntax checked |
 | Visual browser rendering / mobile | PASS on live GitHub Pages using headless Microsoft Edge at desktop 1440×1000 and mobile 390×844: screenshots inspected, no horizontal overflow, images load and anchors resolve |

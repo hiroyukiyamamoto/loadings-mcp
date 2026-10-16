@@ -1,14 +1,14 @@
 # Publication status — 2026-10-16
 
-**Update:** the metabolome/multiset enhancement changes the server after the image recorded below. That image and its deployment command draft are historical and must not be deployed as the updated release. Rebuild the current revision and regenerate the image-specific approval plan before deployment. No Cloud Run or IAM approval has been received, and no service has been deployed.
+**Current release:** the simpler site and metabolome/multiset extension are published and tested. The image below now contains implementation e0a9279, including all four MCP tools and the real fasting/whhl demos. Cloud Run deployment and IAM changes remain unapproved and have not been performed.
 
 ## GitHub Pages
 
 Published: https://hiroyukiyamamoto.github.io/loadings-mcp/ .
 
-The repository's Pages source was changed from legacy `main:/` to GitHub Actions under the user's publication request. [Deployment run 38910609509](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38910609509) succeeded using the existing `docs/` artifact.
+The repository's Pages source was changed from legacy `main:/` to GitHub Actions under the user's publication request. [Deployment run 38914326566](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38914326566) succeeded using the existing `docs/` artifact.
 
-Verified on the live site: HTML, CSS, JS, configuration, both SVG plots, demo JSON and documentation return HTTP 200. Headless Microsoft Edge checks passed at 1440×1000 and 390×844, including rendered screenshots, no horizontal overflow, loaded images and valid in-page anchors. The site correctly states that the MCP endpoint is pending; `docs/config.json` remains null.
+Verified on the live site: HTML, CSS, JS, configuration, all three metabolome SVG plots, demo JSON and documentation return HTTP 200. Headless Microsoft Edge checks passed at 1440×1000 and 390×844, including rendered screenshots, no horizontal overflow, loaded images and valid in-page anchors. The site correctly states that the MCP endpoint is pending; `docs/config.json` remains null.
 
 ## Google Cloud preparation
 
@@ -16,12 +16,12 @@ Selected current project: `stable-century-479407-m7` (active authenticated owner
 
 Existing Docker repository: `asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy`. Only the new `loadings-mcp` image is built. The 23 existing Cloud Run services in asia-northeast1 were inspected and left unchanged; no service named loadings-mcp existed at the preflight check.
 
-Cloud Build: `38f54dcf-a949-4090-988b-d883ae701654`, region asia-northeast1. Source submission is restricted by `.gcloudignore` to the Dockerfile, Docker ignore file, R code and installer; local credentials, R libraries and browser profiles are excluded. The build uses the existing Cloud Build identity and existing source bucket; no permissions were added.
+Cloud Build: `f877dac5-082d-47f5-95d7-9919f4d6f217`, region asia-northeast1. Source submission is restricted by `.gcloudignore` to the Dockerfile, Docker ignore file, R code and installer; local credentials, R libraries and browser profiles are excluded. The build uses the existing Cloud Build identity and existing source bucket; no permissions were added.
 
 Build result: **SUCCESS**. Immutable image:
 
 ```text
-asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:69f4024f7b7f09c812fe5ae0e385ef6ba3e06b0d4857ff3a82ad28dd3bae3871
+asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:152a5a0b3a25a50182ed69361db9571e256b0feae97347f0849270323aa39cf9
 ```
 
 Cloud Run deployment and IAM changes are **pending explicit approval**. The planned runtime identity is a dedicated `loadings-mcp-runtime` service account without project roles. The proposal is to create that identity, deploy loadings-mcp privately using an immutable image digest, and (only if approved) grant `allUsers` the `roles/run.invoker` role on this new service.
@@ -34,7 +34,7 @@ These commands have **not** been executed. Creation of the dedicated identity an
 
 ```sh
 export GOOGLE_CLOUD_PROJECT=stable-century-479407-m7
-export IMAGE=asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:69f4024f7b7f09c812fe5ae0e385ef6ba3e06b0d4857ff3a82ad28dd3bae3871
+export IMAGE=asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:152a5a0b3a25a50182ed69361db9571e256b0feae97347f0849270323aa39cf9
 export RUNTIME_SERVICE_ACCOUNT=loadings-mcp-runtime@stable-century-479407-m7.iam.gserviceaccount.com
 
 gcloud iam service-accounts create loadings-mcp-runtime \
@@ -64,6 +64,6 @@ Build execution, image storage, requests and data transfer may incur charges eve
 
 ## Connection validation
 
-Pending a deployed endpoint. `scripts/smoke-remote.R` will check explicit MCP initialization, official mcptools discovery, demo_data, PCA, all four analyze_model methods and an invalid input. It accepts optional Cloud Run credentials only via `CLOUD_RUN_ID_TOKEN`; output never includes that token.
+Pending a deployed endpoint. `scripts/smoke-remote.R` will check explicit MCP initialization, official mcptools discovery, demo_data, PCA, all four analyze_model methods, all three analyze_multiset methods, and an invalid input. It accepts optional Cloud Run credentials only via `CLOUD_RUN_ID_TOKEN`; output never includes that token.
 
 Claude Code was not found on the local PATH; no Claude Code/Claude Desktop/ChatGPT connection success is claimed. The [official ChatGPT connection guide](https://developers.openai.com/plugins/deploy/connect-chatgpt) was rechecked: connect a reachable HTTPS /mcp endpoint via Plugins → Add custom MCP server, subject to account/workspace permissions and matching authentication.
