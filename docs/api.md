@@ -35,7 +35,7 @@ Each matrix object contains `values` as row arrays; `total_rows`, `total_columns
 
 `coefficients` is PCA rotation or the package P matrix; `loadings` is the package's loading R matrix, a distinct statistic. tests.p_values are the package's two-sided tests; adjustment is `none`. For scientific inference, review assumptions and multiple testing independently.
 
-Tool execution failures return `ok=false`, `error={code:"analysis_error",message:...}`, and warning strings. Protocol/schema failures can instead be MCP errors handled by mcptools. The pinned upstream server supplies `structuredContent` for named-list results when supported by the negotiated protocol, with a JSON text content fallback for older protocols. No custom protocol envelope is implemented here.
+Tool execution failures return `ok=false`, `error={code:"analysis_error",message:...}`, and warning strings. Protocol/schema failures can instead be MCP errors handled by mcptools. Each tool returns one standard MCP text content block containing a JSON object; parse `result.content[0].text` as JSON. The wrapper uses official `ellmer::ContentText` and full numeric precision because this pinned mcptools version rounds ordinary structured-content numbers to four decimal places. `structuredContent` is intentionally absent. This preserves low-abundance metabolites and small p-values without modifying mcptools or implementing a custom protocol envelope.
 
 ## Example
 

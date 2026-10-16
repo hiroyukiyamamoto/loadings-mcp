@@ -19,27 +19,41 @@ run_http_test <- function() {
   tools <- mcptools::mcp_tools(config)
   names(tools) <- vapply(tools, function(t) t@name, character(1))
   stopifnot(setequal(names(tools), c("analyze_pca", "analyze_model", "analyze_multiset", "demo_data")))
-  demo <- tools$demo_data(dataset="fasting")
+  decode <- function(result) {
+    if(inherits(result,"ellmer::ContentToolResult")) result <- result@value
+    if(is.character(result)) result <- jsonlite::fromJSON(result,simplifyVector=FALSE)
+    result
+  }
+  demo <- decode(tools$demo_data(dataset="fasting"))
   source("R/utils.R"); source("R/analysis.R")
-  result <- tools$analyze_pca(x = demo_data()$x, components = 2L, max_rows = 10L)
-  parsed <- result@value
+  # Regression: the old output serializer rounded 29 metabolite columns to zero.
+  stopifnot(isTRUE(all.equal(numeric_matrix(demo$x,"remote"),numeric_matrix(demo_data()$x,"local"))))
+  result <- do.call(tools$analyze_pca, list(x = demo$x, components = 2L, max_rows = 10L))
+  parsed <- decode(result)
   if (!isTRUE(parsed$ok)) print(parsed)
   stopifnot(parsed$ok, parsed$scores$returned_rows == 10L, parsed$loadings$truncated)
+  local_pca <- analyze_pca(demo_data()$x,components=2L,max_rows=10L)
+  stopifnot(isTRUE(all.equal(unlist(parsed$scores$values),unlist(local_pca$scores$values),tolerance=1e-10)),
+    isTRUE(all.equal(unlist(parsed$tests$p_values$values),unlist(local_pca$tests$p_values$values),tolerance=1e-10)))
   bad <- tools$analyze_pca(x = list(rows = list(c(1, 1), c(1, 1), c(1, 1), c(1, 1))), components = 2L, max_rows = 10L)
-  bad <- bad@value
+  bad <- decode(bad)
   stopifnot(!bad$ok, bad$error$code == "analysis_error")
   for (method in c("os_pca", "pls_rog", "pls_da", "rcca_da")) {
-    demo <- demo_data()
     d <- if (method == "os_pca") matrix_input(diff(diag(demo$samples))) else list(rows=list(c(-1,1)))
     result <- do.call(tools$analyze_model, list(method = method, x = demo$x, y = demo$y, d = d, components = 2L, kappa = 0.999, lambda = 0.5, max_rows = 10L))
-    stopifnot(result@value$ok, result@value$scores$returned_rows == 10L)
+    result <- decode(result)
+    stopifnot(result$ok, result$scores$returned_rows == 10L)
   }
   multi <- tools$demo_data(dataset="whhl")
-  multi <- multi@value
+  multi <- decode(multi)
+  local_multi <- demo_data("whhl")
+  for(i in seq_along(multi$blocks$sets)) stopifnot(isTRUE(all.equal(
+    numeric_matrix(multi$blocks$sets[[i]]$data,"remote"),numeric_matrix(local_multi$blocks$sets[[i]]$data,"local"))))
   for(method in c("multipls","multipls_rog","unsv_multipls")) {
     tau <- if(method=="unsv_multipls") multi$unsupervised_tau else multi$tau
     result <- do.call(tools$analyze_multiset,list(method=method,blocks=multi$blocks,tau=tau,y=multi$y,d=multi$d,components=2L,max_rows=5L,kappa=.999))
-    stopifnot(result@value$ok,length(result@value$blocks)==4)
+    result <- decode(result)
+    stopifnot(result$ok,length(result$blocks)==4)
   }
   cat("Official MCP HTTP client: list and call passed on /mcp.\n")
 }

@@ -1,11 +1,11 @@
 # Cost control and operations
 
-Updated 2026-10-17 (Asia/Tokyo). **No hosted MCP endpoint exists yet.** Following explicit approval to include all existing Cloud Run services, the existing project is retained, Budget API was enabled, and the two budgets below were created and read back. No new project, billing link, runtime identity or public IAM change was made. GitHub Pages remains public.
+Updated 2026-10-17 (Asia/Tokyo). **The MCP endpoint is deployed privately and authenticated tests pass; anonymous access is disabled.** Following explicit approval to include all existing Cloud Run services, the existing project is retained, Budget API was enabled, and the two budgets below were created and read back. No new project or billing link was created. The role-free runtime identity and private service were subsequently created under explicit approval; no public IAM change was made. GitHub Pages remains public.
 
 ## Observed environment
 
 - GitHub main matches the local implementation. Existing Linux R/Docker validation remains applicable to the analysis code.
-- Active gcloud project: `stable-century-479407-m7`. There are 23 existing Cloud Run services in Tokyo, none named loadings-mcp. The user explicitly approved applying the cap to this shared project, including all 23 existing services.
+- Active gcloud project: `stable-century-479407-m7`. There are 23 existing Cloud Run services in Tokyo, and the new loadings-mcp service is now the 24th. The user explicitly approved applying the cap to this shared project, including all 23 existing services.
 - No dedicated project will be created: the user chose `stable-century-479407-m7`. Project number: `121643671058`.
 - The open billing account uses **JPY**. Billing IAM permission checks returned budget creation, spend-cap configuration and project billing-association permissions. Cap creation and CONFIGURED-state read-back subsequently succeeded. An actual enforcement event has not been tested.
 - Budget API initially returned 403 SERVICE_DISABLED; it was enabled after approval. Existing account-wide JPY 10,000 alerts-only budget was inspected and left unchanged. Actual billed costs are not returned by this budget configuration API; no zero-cost claim is made.
@@ -61,11 +61,11 @@ Rscript --vanilla scripts/spend-cap.R verify
 
 The verifier permits only dedicated projects or this specifically acknowledged shared project. It rejects a notification-only budget, wrong scope/currency, unsettled cap, cap > JPY 400, or non-CONFIGURED state. Do not rerun create; the budgets already exist. If enforcement occurs, do not automatically lift it.
 
-Pending next-stage approval (no commands below have run): create a role-free `loadings-mcp-runtime` identity and deploy only the new private service with the existing validated immutable image. No new build, registry, cross-project grant or project-wide role is needed for this trial.
+Completed under subsequent approval: created the role-free `loadings-mcp-runtime` identity and deployed the new private service. An end-to-end numerical precision defect required one cached repair build; see DEPLOYMENT.md for the image and results. No registry, cross-project grant or project-wide role was added. The following commands describe the completed deployment and must not be blindly rerun.
 
 ```sh
 export RUNTIME_SERVICE_ACCOUNT=loadings-mcp-runtime@stable-century-479407-m7.iam.gserviceaccount.com
-export IMAGE=asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:152a5a0b3a25a50182ed69361db9571e256b0feae97347f0849270323aa39cf9
+export IMAGE=asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:6e4ff45500b6129f7d5d765de309c092ee0d140b15d6e5128fb14add2c3798f8
 gcloud iam service-accounts create loadings-mcp-runtime --project stable-century-479407-m7 --display-name='loadings MCP runtime'
 # scripts/deploy.sh verifies the cap and asks for deploy before this command:
 gcloud run deploy loadings-mcp --project stable-century-479407-m7 --region asia-northeast1 \

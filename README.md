@@ -4,7 +4,7 @@
 
 R-based MCP tools for researchers using [loadings](https://cran.r-project.org/package=loadings). Official `mcptools::mcp_server()` handles HTTP and protocol processing; no custom MCP implementation or arbitrary R execution tool is exposed. The loadings package is used unchanged.
 
-Website: https://hiroyukiyamamoto.github.io/loadings-mcp/ (published through GitHub Actions). The hosted MCP endpoint is **not deployed**. See [validation status](VALIDATION.md) and [publication status](DEPLOYMENT.md).
+Website: https://hiroyukiyamamoto.github.io/loadings-mcp/ (published through GitHub Actions). The hosted MCP endpoint is **deployed privately and tested with Cloud Run IAM authentication**; anonymous publication remains pending. See [validation status](VALIDATION.md) and [publication status](DEPLOYMENT.md).
 
 ## Methods and tools
 
@@ -16,6 +16,8 @@ Website: https://hiroyukiyamamoto.github.io/loadings-mcp/ (published through Git
 | `analyze_multiset` | Multiset PLS, multiset PLS-ROG and unsupervised multiset PLS, with per-block loading tests |
 
 Scores, coefficients, correlation loadings, unadjusted p-values, conditions and warnings are returned as structured JSON. PCA also returns eigenvalues and explained variance ratios. Other methods explicitly report those quantities as unavailable. Every matrix argument uses `{"rows": [[...], [...]]}`; copy demo_data.x directly into analyze_pca.x. See [tool specification](docs/api.md) and [API research](docs/research.md).
+
+JSON objects are carried in standard MCP text content (`result.content[0].text`) using official `ellmer::ContentText`. This preserves full numeric precision; the pinned mcptools structured-content serializer otherwise rounds small metabolite values and p-values to four decimals. Clients using the R MCP API should parse the returned text with `jsonlite::fromJSON(..., simplifyVector=FALSE)`.
 
 ## Local setup
 
