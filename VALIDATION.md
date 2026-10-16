@@ -13,7 +13,7 @@ Development date: 2026-10-16 (Asia/Tokyo). No Cloud Run deployment, IAM changes,
 | Demo artifacts | PASS: R-generated Iris input/output JSON and score/loading SVG plots |
 | Static site | PASS: section, relative asset/link, viewport and endpoint placeholder checks; JavaScript syntax checked |
 | Visual browser rendering / mobile | UNVERIFIED: no browser automation available; responsive CSS supplied |
-| Docker local build/runtime | UNVERIFIED locally: Docker is not installed; CI build and HTTP smoke test supplied |
+| Docker build/runtime | PASS on GitHub Actions Linux: image build, nonroot container startup with PORT=8090 and HTTP MCP initialization. Docker not available locally. |
 | Cloud Run container compatibility | Configuration reviewed against runtime contract: 0.0.0.0, PORT, exec CMD, concurrency 1; deployed runtime UNVERIFIED |
 | Cloud Run external MCP client | UNVERIFIED: deployment requires explicit approval, project/image and authentication decision |
 | ChatGPT / Claude Desktop / Claude Code | Official connection methods documented; manual client tests UNVERIFIED |

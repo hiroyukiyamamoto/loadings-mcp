@@ -88,7 +88,7 @@ After deployment, get the URL with `gcloud run services describe loadings-mcp --
 
 The static English site lives in `docs/`, with no build framework. Its MCP URL is controlled only by `docs/config.json`; `null` renders an honest pending-deployment message. After actual deployment and connectivity verification, replace null with the verified HTTPS `/mcp` endpoint and commit.
 
-After explicit approval, set repository Settings → Pages → Build and deployment → Source to **GitHub Actions**. Configure required reviewers on the `github-pages` environment if desired. Manually run **Publish GitHub Pages (manual approval required)**. This workflow has no push trigger, so pushing code does not publish the site. It targets the existing repository only. Expected URL: https://hiroyukiyamamoto.github.io/loadings-mcp/ . Preview locally with any static HTTP server rooted at `docs/` (the configuration uses fetch).
+After explicit approval, set repository Settings → Pages → Build and deployment → Source to **GitHub Actions**. Configure required reviewers on the `github-pages` environment if desired. Manually run **Publish GitHub Pages (manual approval required)**. This supplied workflow has no push trigger and targets the existing repository only. During development, GitHub independently started its legacy `pages-build-deployment` workflow on pushes; those runs were cancelled because publication was not approved. Existing Pages settings were preserved. Until the source is explicitly reviewed/changed, future pushes may start that legacy workflow again. Expected URL: https://hiroyukiyamamoto.github.io/loadings-mcp/ . Preview locally with any static HTTP server rooted at `docs/` (the configuration uses fetch).
 
 ## Validation and scope
 
