@@ -4,7 +4,9 @@ set -euo pipefail
 : "${IMAGE:?Set IMAGE to an already built, pushed container image (prefer a sha256 digest)}"
 : "${RUNTIME_SERVICE_ACCOUNT:?Set the approved least-privilege runtime service account}"
 : "${BILLING_ACCOUNT_ID:?Set the approved billing account ID}"
-[[ "$GOOGLE_CLOUD_PROJECT" == loadings-mcp-* ]] || { echo 'Use a dedicated loadings-mcp-* project'; exit 1; }
+if [[ "$GOOGLE_CLOUD_PROJECT" != loadings-mcp-* ]]; then
+  [[ "$GOOGLE_CLOUD_PROJECT" == stable-century-479407-m7 && "${APPROVE_SHARED_PROJECT:-}" == "$GOOGLE_CLOUD_PROJECT" ]] || { echo 'Shared project impact must be explicitly approved'; exit 1; }
+fi
 # Fail closed: a normal alert budget is insufficient. This does not guarantee a bill ceiling.
 Rscript --vanilla scripts/spend-cap.R verify
 REGION="asia-northeast1"

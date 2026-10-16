@@ -2,23 +2,23 @@
 
 GitHub Pages is published at https://hiroyukiyamamoto.github.io/loadings-mcp/ . The R MCP server is **not deployed**; `docs/config.json` remains null. No anonymous Cloud Run access has been granted.
 
-The latest request supersedes the earlier plan to deploy in the shared project. **Use a dedicated project and verify cost protection first.** See [cost-control findings, estimates, pending approvals and emergency procedures](OPERATIONS.md).
+The user chose the existing project and explicitly approved that the JPY 400 Run cap can also pause all 23 existing services. **Budgets are now configured; private deployment and public access remain unexecuted.** See [cost-control findings, estimates, pending approvals and emergency procedures](OPERATIONS.md).
 
 ## Confirmed
 
 - GitHub main and the local checkout matched at the start of review (`e249b5a`). Existing analysis code and the loadings package are unchanged.
 - The current gcloud account is authenticated. Current project `stable-century-479407-m7` contains 23 Tokyo Cloud Run services, none named loadings-mcp; no existing service was changed.
-- The open billing account is JPY-denominated. IAM checks confirm permission to create budgets, configure spend caps and link projects. Budget API reads fail with 403 SERVICE_DISABLED; no API was enabled and no budget was created.
-- Official Cloud Billing API documentation supports Cloud Run spend caps and nonnegative JPY amounts. Actual account acceptance/read-back and enforcement are **unverified**.
+- The open billing account is JPY-denominated. Budget API was enabled after approval. A JPY 400 monthly Cloud Run spend cap and a separate JPY 500 monthly project-wide notification budget were created and read back. Existing JPY 10,000 account budget is unchanged.
+- Official Cloud Billing API documentation supports Cloud Run spend caps and nonnegative JPY amounts. Account acceptance/read-back succeeded with state CONFIGURED. Actual enforcement and invoice totals remain **unverified**.
 - All eight real-demo analyses succeeded in the local measurement script; observed analysis + JSON time 0.12–1.00s, sampled peak RSS up to 165.1 MiB. These are not Cloud Run measurements.
 
 ## Pending approval
 
-Proposed dedicated project: `loadings-mcp-20261017` (availability unverified). First approve project creation, association with the existing JPY billing account, required APIs, a JPY 400 monthly Run spend cap and JPY 500 project-wide alert budget. The JPY 400 threshold reserves some headroom toward the JPY 500/month goal, but enforcement delays and non-Run charges prevent a strict total guarantee.
+Selected project: `stable-century-479407-m7`; no new project or billing association was created. The cap covers ALL Cloud Run services there and includes existing usage. Budget IDs and exact next-stage commands are in [OPERATIONS.md](OPERATIONS.md).
 
-The deployment script now refuses a shared project and requires a read-back-verified, settled CONFIGURED Run cap <= JPY 400. Candidate private runtime: 1 CPU, 512 MiB, concurrency 1, min 0, service/revision max 1, request billing, 30s timeout. These settings remain undeployed and require Cloud Run sizing tests.
+The deployment script requires a verified, settled CONFIGURED Run cap <= JPY 400 and an explicit shared-project acknowledgment. Initial private runtime: 1 CPU, 512 MiB, concurrency 1, min 0, service/revision max 1, request billing, 30s timeout. Actual Cloud Run sizing remains unverified.
 
-Runtime identity, registry/build permissions and private deployment follow approval. Before any anonymous publication, implement/test pre-parser body limits, a computation deadline and bounded request admission; run actual private MCP tests, then obtain separate final public-access approval. A Run timeout alone does not kill computation. Do not replace the absent cap with alerts and silently publish.
+Next approval: create the dedicated role-free runtime identity and deploy only the new private service using the already validated image (no new build). No role-free identity or service of this name existed at preflight. Public request safeguards, private MCP tests and separate final anonymous-access approval still remain.
 
 ## Existing validated artifact (historical)
 
@@ -28,7 +28,7 @@ The unchanged metabolome/multiset implementation `e0a9279` passed [Linux R and D
 asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:152a5a0b3a25a50182ed69361db9571e256b0feae97347f0849270323aa39cf9
 ```
 
-This artifact is not deployed and does not include future public transport safeguards. Do not grant cross-project reader roles in the shared project without approval; build the eventual release in the dedicated project. No build was launched in this cost-control review.
+This artifact is not deployed and does not include future public transport safeguards. It can be used for the approved-project private trial; a new image will be needed once public transport safeguards are added. No build was launched in this cost-control review.
 
 ## Verification status
 
@@ -36,7 +36,7 @@ This artifact is not deployed and does not include future public transport safeg
 | --- | --- |
 | Official website | Public; latest reference/design publication succeeded |
 | Cloud Run / endpoint | Not created; endpoint unknown |
-| Spend cap / project alert | Prepared, not created; API activation and project approval required |
+| Spend cap / project alert | CREATED and read back: JPY 400 Run cap CONFIGURED; JPY 500 alerts-only; all existing Run services are in scope |
 | Cost gate tests | Local PASS; rejects alert-only, wrong scope/currency, inactive/unsettled/excessive caps |
 | R demo benchmark | All 8 methods PASS locally; sampled Windows metrics only |
 | Cloud Run initialize / tools / analyses | Unverified until private deployment |

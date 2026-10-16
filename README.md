@@ -72,7 +72,7 @@ The image includes compilers, curl/OpenSSL/XML dependencies and the R packages, 
 
 ## Google Cloud Run — approval required
 
-The current rollout requires a **dedicated project** and a verified JPY 400 monthly Cloud Run spend cap before deployment. JPY 500/month is a total cost target, not a guaranteed ceiling: enforcement is delayed and Build/Registry/Logging/network charges can remain outside the cap. Budget API activation, project creation/billing association and budgets await approval. See [operations and cost review](OPERATIONS.md) and [current publication status](DEPLOYMENT.md). Anonymous access needs separate final approval after private testing and public request safeguards.
+The user approved retaining project `stable-century-479407-m7`, including the impact on all 23 existing Run services. A JPY 400 monthly Cloud Run spend cap is now CONFIGURED and a separate JPY 500 project-wide alerts-only budget exists. Existing service usage counts toward the cap. JPY 500/month is a target, not a guaranteed ceiling: enforcement is delayed and Build/Registry/Logging/network charges can remain outside the cap. The script requires a freshly verified cap and `APPROVE_SHARED_PROJECT=stable-century-479407-m7` for this acknowledged exception. Runtime identity/private deployment and final anonymous access still await approval. See [operations and cost review](OPERATIONS.md) and [current publication status](DEPLOYMENT.md).
 
 Service: `loadings-mcp`; region: `asia-northeast1`. Prepare an approved Google Cloud project, billing, Artifact Registry repository, Cloud Build/Run APIs and appropriate IAM before these operations. Do not automatically enable services or change public access.
 
@@ -83,6 +83,8 @@ export GOOGLE_CLOUD_PROJECT=YOUR_APPROVED_PROJECT
 export IMAGE=YOUR_APPROVED_REGISTRY_IMAGE_TAG
 export RUNTIME_SERVICE_ACCOUNT=YOUR_APPROVED_RUNTIME_SERVICE_ACCOUNT
 export BILLING_ACCOUNT_ID=YOUR_APPROVED_JPY_BILLING_ACCOUNT
+# Required only for the specifically approved shared project:
+export APPROVE_SHARED_PROJECT=stable-century-479407-m7
 gcloud builds submit --project "$GOOGLE_CLOUD_PROJECT" --tag "$IMAGE" .
 # Prefer setting IMAGE to the resulting immutable sha256 digest before deployment.
 bash scripts/deploy.sh

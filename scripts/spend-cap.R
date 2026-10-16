@@ -1,5 +1,9 @@
 # Official Cloud Billing Budget API. Default mode only prints a proposed request.
 if (dir.exists(".library")) .libPaths(c(normalizePath(".library"), .libPaths()))
+approved_budget_project <- function(project, shared_approval="") {
+  grepl("^loadings-mcp-[a-z0-9-]+$",project) ||
+    (identical(project,"stable-century-479407-m7") && identical(shared_approval,project))
+}
 spend_cap_body <- function(project_number, amount = 400L) {
   stopifnot(grepl("^[0-9]+$", project_number), length(amount)==1L,
             is.finite(amount), amount > 0, amount <= 500, amount==floor(amount))
@@ -26,7 +30,8 @@ run_spend_cap <- function(mode = "plan") {
   if (!mode %in% c("plan","create","verify")) stop("Use plan, create or verify")
   project <- Sys.getenv("GOOGLE_CLOUD_PROJECT")
   account <- Sys.getenv("BILLING_ACCOUNT_ID")
-  if (!grepl("^loadings-mcp-[a-z0-9-]+$",project)) stop("Use a dedicated loadings-mcp-* project")
+  if (!approved_budget_project(project,Sys.getenv("APPROVE_SHARED_PROJECT")))
+    stop("Use a dedicated project, or explicitly acknowledge the approved shared project's impact with APPROVE_SHARED_PROJECT")
   if (!grepl("^[0-9A-F]{6}-[0-9A-F]{6}-[0-9A-F]{6}$",account)) stop("Set BILLING_ACCOUNT_ID")
   cli <- function(args) {
     command <- if (.Platform$OS.type=="windows") Sys.which("gcloud.cmd") else Sys.which("gcloud")

@@ -1,22 +1,22 @@
 # Cost control and operations
 
-Reviewed 2026-10-17 (Asia/Tokyo). **No hosted MCP endpoint exists yet. No project, billing link, budget, API activation or IAM change was made during this review.** GitHub Pages remains public. The following is a staged proposal requiring approval.
+Updated 2026-10-17 (Asia/Tokyo). **No hosted MCP endpoint exists yet.** Following explicit approval to include all existing Cloud Run services, the existing project is retained, Budget API was enabled, and the two budgets below were created and read back. No new project, billing link, runtime identity or public IAM change was made. GitHub Pages remains public.
 
 ## Observed environment
 
 - GitHub main matches the local implementation. Existing Linux R/Docker validation remains applicable to the analysis code.
-- Active gcloud project: `stable-century-479407-m7`. There are 23 existing Cloud Run services in Tokyo, none named loadings-mcp. Do not put this service's spend cap on that shared project.
-- Five projects are visible; none is a dedicated loadings-mcp project. Proposed new ID: `loadings-mcp-20261017` (global availability unverified; stop if unavailable).
-- The open billing account uses **JPY**. Billing IAM permission checks returned budget creation, spend-cap configuration and project billing-association permissions. This is not proof of successful cap creation or enforcement.
-- Budget API reads fail with **403 SERVICE_DISABLED** for the current quota project. Nothing was enabled. Existing budgets and actual billed costs could not be inspected through this API. No claim of zero existing spend is made.
+- Active gcloud project: `stable-century-479407-m7`. There are 23 existing Cloud Run services in Tokyo, none named loadings-mcp. The user explicitly approved applying the cap to this shared project, including all 23 existing services.
+- No dedicated project will be created: the user chose `stable-century-479407-m7`. Project number: `121643671058`.
+- The open billing account uses **JPY**. Billing IAM permission checks returned budget creation, spend-cap configuration and project billing-association permissions. Cap creation and CONFIGURED-state read-back subsequently succeeded. An actual enforcement event has not been tested.
+- Budget API initially returned 403 SERVICE_DISABLED; it was enabled after approval. Existing account-wide JPY 10,000 alerts-only budget was inspected and left unchanged. Actual billed costs are not returned by this budget configuration API; no zero-cost claim is made.
 
 ## Spend cap findings
 
-Cloud Run is eligible, service ID `152E-C115-5142`. A cap covers one project and one service, so it would also pause any other Cloud Run workloads in that project. Reseller accounts are excluded; this account has no master billing account, but final acceptance still requires a successful create/read-back. Monthly caps notify owners/admins at 50/80/100%, block new usage when enforced, and reset next month. Enforcement is delayed and overages remain billable. [Google spend-cap guide](https://docs.cloud.google.com/billing/docs/how-to/budgets-spend-caps)
+Cloud Run is eligible, service ID `152E-C115-5142`. A cap covers one project and one service, so it would also pause any other Cloud Run workloads in that project. Reseller accounts are excluded; this account has no master billing account, and a JPY 400 cap was successfully created/read back. Monthly caps notify owners/admins at 50/80/100%, block new usage when enforced, and reset next month. Enforcement is delayed and overages remain billable. [Google spend-cap guide](https://docs.cloud.google.com/billing/docs/how-to/budgets-spend-caps)
 
-The API allows a nonnegative specified amount (documented minimum **0**); use a positive operational threshold. Currency must match the account. **JPY 500 can be requested directly**; acceptance is unverified until creation. We propose **JPY 400** for Cloud Run to leave some room below the JPY 500 total target. [API amount specification](https://docs.cloud.google.com/billing/docs/reference/budget/rest/v1/billingAccounts.budgets#BudgetAmount)
+The API allows a nonnegative specified amount (documented minimum **0**); use a positive operational threshold. Currency must match the account. **JPY 400 was accepted and configured** for Cloud Run; a JPY 500 all-service notification budget was also created. The Run cap includes existing services, not only loadings-mcp. [API amount specification](https://docs.cloud.google.com/billing/docs/reference/budget/rest/v1/billingAccounts.budgets#BudgetAmount)
 
-The proposed request uses gross costs excluding credits, monthly scope, the three required thresholds, project recipients and `spendCap.inputState=CONFIGURED`. `scripts/spend-cap.R` creates only with an explicit approval environment flag; `verify` rejects alerts-only budgets, wrong scope/currency, lifted/enforced/reconciling caps and caps above JPY 400. Verification reads back configuration; it does **not** prove that enforcement has happened. [Official API guide](https://docs.cloud.google.com/billing/docs/how-to/budget-api-spend-cap)
+The configured cap uses gross costs excluding credits, monthly scope, the three required thresholds, project recipients and `spendCap.inputState=CONFIGURED`. `scripts/spend-cap.R` creates only with an explicit approval environment flag; `verify` rejects alerts-only budgets, wrong scope/currency, lifted/enforced/reconciling caps and caps above JPY 400. Verification reads back configuration; it does **not** prove that enforcement has happened. [Official API guide](https://docs.cloud.google.com/billing/docs/how-to/budget-api-spend-cap)
 
 No USD conversion is needed for this JPY account. For USD cost illustrations, Google sets local conversion rates monthly; use the actual billing conversion rate, not a market quote. In an existing billing export, JPY cost / `currency_conversion_rate` gives USD. No BigQuery export is enabled by this project. [Currency rules](https://docs.cloud.google.com/billing/docs/resources/currency)
 
@@ -41,40 +41,44 @@ Other charges are outside a Cloud Run-only cap:
 - Cloud Logging: first 50 GiB/project/month is free; additional ordinary storage ingestion USD 0.50/GiB. High traffic can generate costs even for rejected requests. Use default retention, no payload logging or external exports. [Observability pricing](https://cloud.google.com/products/observability/pricing)
 - Network transfer, taxes and any unrelated resources are not guaranteed covered. No load balancer, Cloud Armor, VPC connector, NAT, database, Scheduler or paid external monitoring is proposed.
 
-**JPY 500/month is a target, not a guaranteed invoice ceiling.** A normal all-service JPY 500 budget is an additional notification only, not a substitute for the cap. Inspect billing Reports by dedicated project for actual costs, including storage/build/network/taxes. The Run cap does not cover the rest of the billing account.
+**JPY 500/month is a target, not a guaranteed invoice ceiling.** A normal all-service JPY 500 budget is an additional notification only, not a substitute for the cap. Inspect billing Reports by the selected shared project and by service for actual costs, including storage/build/network/taxes. The Run cap does not cover the rest of the billing account.
 
-## Proposed staged rollout (not executed)
+## Applied budgets and next rollout
 
-1. Approve creation of `loadings-mcp-20261017`, link the existing JPY billing account, and enable only required APIs there (Budget, Billing, Run, Artifact Registry, IAM, Cloud Build). Leave gcloud's current project unchanged; every command supplies `--project`.
-2. Create the JPY 400 monthly Run spend cap and a separate JPY 500 project-wide alerts-only budget. Read back exact project/service/currency/amount/state. If creation/verification fails, do not deploy or publish; report the reason and request approval for any alternative.
-3. Approve a dedicated role-free runtime service account, one Docker registry, one bounded build, and the private service. New project's service agents/build identity may require project-local build/storage/artifact permissions: enumerate these before granting; no roles in existing projects. Build image in the dedicated project rather than granting cross-project access to the old registry.
-4. Deploy privately using `scripts/deploy.sh`. Initial candidate: min=0/max=1 at service and revision, concurrency=1, 1 CPU, 512 MiB, request billing, timeout=30s. Benchmark memory/latency in Cloud Run, including cold starts and maximum accepted data. Stop/revise if 512 MiB is insufficient. No public IAM yet.
-5. Before public approval, add/test pre-parser request-size limits, an actual computation deadline (killable worker), and bounded global request admission. The current server has dimension validation but **does not yet have these transport protections**. A Cloud Run timeout returns 504 and does not itself terminate computation. In-process throttling resets when an instance restarts and is not a durable monthly limit. Do not call this DoS protection or a bill ceiling. [Timeout behavior](https://docs.cloud.google.com/run/docs/configuring/request-timeout)
-6. Test private endpoint with `scripts/smoke-remote.R`: initialize, all four tools/eight methods, invalid input and JSON. Also test oversized bodies, rate rejection, hard deadline, connection failures and recovery. HTTP/R-client success is separate from manual ChatGPT/Claude success.
-7. Present measured results, cap configuration and remaining risks, then obtain **separate final approval for anonymous access** (`allUsers` Run invoker only on this service). Repeat tests anonymously before publishing the actual endpoint in `docs/config.json` and documenting free best-effort access, limits and possible suspension.
+- **Run cap:** JPY 400/month, project `121643671058`, service `152E-C115-5142`, gross cost excluding credits, state **CONFIGURED**, no reconciling flag. Budget ID `fe0177db-e81e-494f-a512-4b1e7343ec0f`.
+- **Project notification:** JPY 500/month, all services in the same project, net of credits, 50/80/100% notifications, no spendCap. Budget ID `7b29815c-461b-439e-aecd-5abc35379ba9`. This does not stop services.
+- The existing account-wide JPY 10,000 budget is unchanged. The JPY 400 cap can stop **all 23 existing Run services**, even before loadings-mcp is deployed. Existing current-month gross usage counts; no enforcement test, cap lift or budget overwrite was performed.
 
-Example budget commands **after infrastructure approval and creation**, from repository root:
+Reverify before every deployment:
 
 ```sh
-export GOOGLE_CLOUD_PROJECT=loadings-mcp-20261017
+export GOOGLE_CLOUD_PROJECT=stable-century-479407-m7
+# Explicitly acknowledged shared-project impact; approved in this session:
+export APPROVE_SHARED_PROJECT=stable-century-479407-m7
 export BILLING_ACCOUNT_ID=YOUR_APPROVED_JPY_BILLING_ACCOUNT
-Rscript --vanilla scripts/spend-cap.R plan
-# Only after explicit budget creation approval:
-APPROVE_BUDGET_CREATE=yes Rscript --vanilla scripts/spend-cap.R create
 Rscript --vanilla scripts/spend-cap.R verify
 ```
 
-First-stage infrastructure commands awaiting approval (not executed):
+The verifier permits only dedicated projects or this specifically acknowledged shared project. It rejects a notification-only budget, wrong scope/currency, unsettled cap, cap > JPY 400, or non-CONFIGURED state. Do not rerun create; the budgets already exist. If enforcement occurs, do not automatically lift it.
+
+Pending next-stage approval (no commands below have run): create a role-free `loadings-mcp-runtime` identity and deploy only the new private service with the existing validated immutable image. No new build, registry, cross-project grant or project-wide role is needed for this trial.
 
 ```sh
-gcloud projects create loadings-mcp-20261017 --name='loadings MCP'
-gcloud billing projects link loadings-mcp-20261017 --billing-account="$BILLING_ACCOUNT_ID"
-gcloud services enable billingbudgets.googleapis.com cloudbilling.googleapis.com run.googleapis.com artifactregistry.googleapis.com iam.googleapis.com cloudbuild.googleapis.com --project=loadings-mcp-20261017
+export RUNTIME_SERVICE_ACCOUNT=loadings-mcp-runtime@stable-century-479407-m7.iam.gserviceaccount.com
+export IMAGE=asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:152a5a0b3a25a50182ed69361db9571e256b0feae97347f0849270323aa39cf9
+gcloud iam service-accounts create loadings-mcp-runtime --project stable-century-479407-m7 --display-name='loadings MCP runtime'
+# scripts/deploy.sh verifies the cap and asks for deploy before this command:
+gcloud run deploy loadings-mcp --project stable-century-479407-m7 --region asia-northeast1 \
+  --image "$IMAGE" --service-account "$RUNTIME_SERVICE_ACCOUNT" --no-allow-unauthenticated \
+  --port 8080 --concurrency 1 --cpu 1 --memory 512Mi --cpu-throttling --timeout 30 \
+  --min 0 --max 1 --min-instances 0 --max-instances 1
 ```
 
-Then use the budget commands above. Prepare the separate **alerts-only** budget with the same single project filter, monthly period, JPY 500 specified amount, default billing recipients and project recipients, and 50/80/100% current-spend thresholds; omit `services` (all services), exclude no service costs, and **omit `spendCap`**. Read it back as a notification budget; never accept it as the deployment gate. Stop on any project-name conflict, denied permission, unsupported amount or unavailable spend-cap feature. No fallback IAM grant, billing-account replacement or alternative fee control is automatically authorized.
+Immediately before creation, confirm the name is still unused. Test cold start, memory, initialize, tools/list, all four tools/eight methods, invalid input and JSON using `scripts/smoke-remote.R` with an identity token. HTTP/R-client success is separate from manual ChatGPT/Claude success. Stop if the cap cannot be verified; never lift it to complete tests.
 
-The create operation does not lift or overwrite existing caps. If the API reports a duplicate scope, inspect it; do not delete a budget automatically. The account ID/token is not written to the repository.
+Before public approval, add/test pre-parser body limits, an actual computation deadline (killable worker), bounded request admission and failure/recovery tests. These are **not implemented yet**. Cloud Run timeout returns 504 but does not kill computation. In-process throttling resets on restart and does not provide a durable monthly limit. [Timeout behavior](https://docs.cloud.google.com/run/docs/configuring/request-timeout)
+
+Present measured results and remaining risks, obtain separate final approval for anonymous invocation on **only loadings-mcp**, repeat tests anonymously, and only then publish the actual /mcp endpoint and free best-effort service limits on Pages. No public invocation has been enabled.
 
 ## Measurements and verification
 
@@ -95,26 +99,26 @@ These exclude HTTP and Cloud Run cold starts; sampling can miss peaks. They supp
 
 ## Monitoring and emergency procedure
 
-Use built-in Cloud Run Metrics (request count, 4xx/5xx, latency, CPU, memory) and Cloud Billing Reports filtered to the dedicated project. For monthly request totals, choose metric `run.googleapis.com/request_count`, service `loadings-mcp`, month interval and sum; group by `response_code_class` for errors. Inspect memory after each method/cold start. No uptime polling, custom metrics or paid alert policies are configured yet. Spend-cap emails go to billing admins/project owners automatically. [Run monitoring](https://docs.cloud.google.com/run/docs/monitoring)
+Use built-in Cloud Run Metrics (request count, 4xx/5xx, latency, CPU, memory) and Cloud Billing Reports filtered to project `stable-century-479407-m7`. For monthly request totals, choose metric `run.googleapis.com/request_count`, service `loadings-mcp`, month interval and sum; group by `response_code_class` for errors. Inspect memory after each method/cold start. No uptime polling, custom metrics or paid alert policies are configured yet. Spend-cap emails go to billing admins/project owners automatically. [Run monitoring](https://docs.cloud.google.com/run/docs/monitoring)
 
 Read-only checks after deployment:
 
 ```sh
-gcloud run services describe loadings-mcp --project loadings-mcp-20261017 --region asia-northeast1
-gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="loadings-mcp" AND severity>=ERROR' --project loadings-mcp-20261017 --freshness=24h --limit=100
+gcloud run services describe loadings-mcp --project stable-century-479407-m7 --region asia-northeast1
+gcloud logging read 'resource.type="cloud_run_revision" AND resource.labels.service_name="loadings-mcp" AND severity>=ERROR' --project stable-century-479407-m7 --freshness=24h --limit=100
 Rscript --vanilla scripts/spend-cap.R verify
 ```
 
 Emergency: revoke public reachability by changing **only this service** to internal ingress:
 
 ```sh
-gcloud run services update loadings-mcp --project loadings-mcp-20261017 --region asia-northeast1 --ingress internal
+gcloud run services update loadings-mcp --project stable-century-479407-m7 --region asia-northeast1 --ingress internal
 ```
 
-Then verify external MCP requests fail. In-flight work may continue; if necessary delete **only this dedicated service** to stop its runtime:
+Then verify external MCP requests fail. In-flight work may continue; if necessary delete **only this loadings-mcp service** to stop its runtime:
 
 ```sh
-gcloud run services delete loadings-mcp --project loadings-mcp-20261017 --region asia-northeast1
+gcloud run services delete loadings-mcp --project stable-century-479407-m7 --region asia-northeast1
 ```
 
 Do not disable billing on the shared project or lift a cap automatically. Deleting the service does not remove image/log/build-source storage charges. Restoration needs an approved redeploy or ingress change, valid cost protection and fresh connectivity tests. Spend caps reset monthly and can resume service automatically; emergency internal ingress persists until explicitly changed. Update the site's service status if suspended.

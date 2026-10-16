@@ -1,4 +1,8 @@
 source("scripts/spend-cap.R")
+stopifnot(approved_budget_project("loadings-mcp-test"),
+  !approved_budget_project("stable-century-479407-m7"),
+  approved_budget_project("stable-century-479407-m7","stable-century-479407-m7"),
+  !approved_budget_project("other-project","other-project"))
 b <- spend_cap_body("123456789")
 b$spendCap <- list(outputState="CONFIGURED")
 stopifnot(validate_spend_cap(b,"123456789"))
