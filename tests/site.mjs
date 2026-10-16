@@ -5,7 +5,11 @@ for (const id of ['overview','features','tools','start','examples','documentatio
 for (const [,src] of html.matchAll(/(?:src|href)="([^"#]+)"/g)) if (!/^https?:/.test(src)) assert(existsSync(`docs/${src}`), src);
 const endpoint = JSON.parse(readFileSync('docs/config.json')).endpoint;
 assert(endpoint === null || (/^https:\/\//.test(endpoint) && new URL(endpoint).pathname.endsWith('/mcp')));
-const result = JSON.parse(readFileSync('docs/data/iris-pca.json'));
-assert.equal(result.ok,true); assert.equal(result.scores.returned_rows,150);
+const result = JSON.parse(readFileSync('docs/data/fasting-pca.json'));
+assert.equal(result.ok,true); assert.equal(result.scores.returned_rows,10);
+assert.equal(result.conditions.variables,282);
+const multi = JSON.parse(readFileSync('docs/data/whhl-multiset.json'));
+assert.equal(multi.ok,true); assert.equal(multi.blocks.length,4);
+assert(!/iris/i.test(html));
 assert(html.includes('name="viewport"')); assert(!html.includes('.run.app'));
 console.log('Static site assets, sections, viewport, demo output and pending endpoint passed.');

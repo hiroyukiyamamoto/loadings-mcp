@@ -8,11 +8,12 @@ Final implementation commit `5b181fd` passed both Linux R and Docker jobs in [Gi
 | --- | --- |
 | R package installation | PASS on Windows R 4.4.0 with Rtools and Linux R 4.5.2 CI: loadings 0.6.1, ellmer 0.5.0, httr2 1.3.0, pinned mcptools 1.0.3.9000. Windows nanonext 1.10.3. |
 | PCA MVP first | PASS before adding other methods: numeric comparison with official functions, truncation and invalid inputs |
-| All five methods | PASS: local demo analysis and loading result comparison with official functions |
+| Single-dataset methods | PASS: all five methods on full fasting metabolome data, including official loading-result comparison and nonfinite-value handling |
 | HTTP server startup | PASS: child R process, validated PORT, /mcp endpoint |
-| Official MCP client discovery | PASS: mcptools::mcp_tools, exactly three intended tools, no session/code execution tools |
-| Official MCP client execution | PASS: PCA success, truncation, invalid input, four additional analysis methods |
-| Demo artifacts | PASS: R-generated Iris input/output JSON and score/loading SVG plots |
+| Multiset methods | PASS locally: multiset PLS, multiset PLS-ROG and unsupervised multiset PLS on full matched whhl blocks; direct official loading-result comparison including the final tissue block |
+| Official MCP client discovery | PASS locally: mcptools::mcp_tools, exactly four intended tools, no session/code execution tools |
+| Official MCP client execution | PASS locally: fasting PCA, truncation, invalid input, four single-dataset models, whhl demo and all three multiset models |
+| Demo artifacts | PASS: full packaged fasting input/PCA output, 282-metabolite loading plot, sample score plot, four-tissue whhl multiset result and score panels |
 | Static site | PASS: section, relative asset/link, viewport and endpoint placeholder checks; JavaScript syntax checked |
 | Visual browser rendering / mobile | PASS on live GitHub Pages using headless Microsoft Edge at desktop 1440×1000 and mobile 390×844: screenshots inspected, no horizontal overflow, images load and anchors resolve |
 | Docker build/runtime | PASS on GitHub Actions Linux: image build, nonroot container startup with PORT=8090 and HTTP MCP initialization. Docker not available locally. |

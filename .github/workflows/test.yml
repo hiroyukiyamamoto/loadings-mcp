@@ -13,6 +13,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libssl-dev libxml2-dev libuv1-dev zlib1g-dev pkg-config cmake
       - run: Rscript --vanilla scripts/install.R
       - run: Rscript --vanilla tests/models.R
+      - run: Rscript --vanilla tests/multiset.R
       - run: Rscript --vanilla tests/http.R
       - run: Rscript --vanilla examples/generate.R
       - uses: actions/setup-node@v4

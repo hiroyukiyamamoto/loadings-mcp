@@ -8,4 +8,5 @@ fetch('config.json').then(response => {
   if (url.protocol !== 'https:' || !url.pathname.endsWith('/mcp') || url.username || url.password) return;
   document.getElementById('endpoint').textContent = url.href;
   document.getElementById('connect-status').textContent = `Connect using Streamable HTTP at ${url.href}. Configure authentication according to your deployment.`;
+  document.getElementById('claude-command').textContent = `claude mcp add --transport http loadings-mcp ${url.href}`;
 }).catch(() => { /* Keep the honest pending-deployment fallback. */ });

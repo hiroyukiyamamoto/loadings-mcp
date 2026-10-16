@@ -13,14 +13,14 @@ numeric_matrix <- function(x, name, min_rows = 1L) {
   if (is.list(x) && identical(names(x), "rows")) x <- x$rows
   # ellmer converts nested numeric arrays to a matrix before invoking a tool.
   if (is.matrix(x)) {
-    if (!is.numeric(x) || nrow(x) < min_rows || nrow(x) > 500L || ncol(x) < 1L || ncol(x) > 200L || length(x) > 50000L || any(!is.finite(x)))
+    if (!is.numeric(x) || nrow(x) < min_rows || nrow(x) > 500L || ncol(x) < 1L || ncol(x) > 400L || length(x) > 50000L || any(!is.finite(x)))
       fail(paste(name, "must be a finite numeric matrix within the size limits"))
     return(x)
   }
   if (!is.list(x) || !length(x) || length(x) > 500L) fail(paste(name, "must be a row array with at most 500 rows"))
   sizes <- lengths(x)
-  if (length(x) < min_rows || any(sizes < 1L) || length(unique(sizes)) != 1L || sizes[1] > 200L || sum(sizes) > 50000L)
-    fail(paste(name, "has invalid dimensions; maximum 200 columns and 50000 cells"))
+  if (length(x) < min_rows || any(sizes < 1L) || length(unique(sizes)) != 1L || sizes[1] > 400L || sum(sizes) > 50000L)
+    fail(paste(name, "has invalid dimensions; maximum 400 columns and 50000 cells"))
   rows <- lapply(x, function(row) {
     if (is.list(row)) {
       if (any(lengths(row) != 1L) || !all(vapply(row, is.numeric, logical(1)))) fail(paste(name, "must contain numbers"))
@@ -31,6 +31,7 @@ numeric_matrix <- function(x, name, min_rows = 1L) {
   })
   do.call(rbind, rows)
 }
+matrix_input <- function(x) list(rows = lapply(seq_len(nrow(x)), function(i) unname(as.list(x[i, ]))))
 matrix_result <- function(x, limit, components) {
   if (is.null(x)) return(NULL)
   x <- as.matrix(x)

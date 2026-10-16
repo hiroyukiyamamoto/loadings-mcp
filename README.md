@@ -10,9 +10,10 @@ Website: https://hiroyukiyamamoto.github.io/loadings-mcp/ (published through Git
 
 | Tool | Function |
 | --- | --- |
-| `demo_data` | Built-in Iris sample rows and one-hot group data |
+| `demo_data` | Packaged metabolomes: fasting mouse liver (default) or matched whhl rabbit tissues |
 | `analyze_pca` | `stats::prcomp()` + `loadings::pca_loading()` |
 | `analyze_model` | `os_pca`, `pls_rog`, `pls_da`, or `rcca_da`, each with its official loading test |
+| `analyze_multiset` | Multiset PLS, multiset PLS-ROG and unsupervised multiset PLS, with per-block loading tests |
 
 Scores, coefficients, correlation loadings, unadjusted p-values, conditions and warnings are returned as structured JSON. PCA also returns eigenvalues and explained variance ratios. Other methods explicitly report those quantities as unavailable. Every matrix argument uses `{"rows": [[...], [...]]}`; copy demo_data.x directly into analyze_pca.x. See [tool specification](docs/api.md) and [API research](docs/research.md).
 
@@ -24,6 +25,7 @@ Run from this repository root. R >= 4.1 and compilation tools may be needed; Doc
 Rscript --vanilla scripts/install.R
 Rscript --vanilla tests/pca.R
 Rscript --vanilla tests/models.R
+Rscript --vanilla tests/multiset.R
 Rscript --vanilla tests/http.R
 Rscript --vanilla R/server.R
 ```
@@ -55,7 +57,9 @@ Rscript --vanilla examples/generate.R
 node tests/site.mjs
 ```
 
-This creates the actual JSON input, output, score plot and loading plot displayed on the static website. To explore advanced methods, use Iris `y` for PLS-DA/RCCA-DA; define your scientific ordering before using PLS-ROG. See `tests/models.R` for differential matrix examples (synthetic ordering for testing only).
+This creates actual fasting-metabolome PCA input/output and score/loading plots, plus a four-tissue whhl multiset PLS example. `demo_data(dataset="fasting")` returns all 10 samples and 282 metabolites without filtering. `demo_data(dataset="whhl")` returns all 9 matched samples across plasma, liver, heart and brain (619 metabolites total), with the package's group, connection-weight and differential matrices. Use `unsupervised_tau` for unsupervised multiset PLS. Group codes are retained from the package; no group-code-to-treatment mapping is inferred.
+
+Multiset input is a named envelope: `blocks={"sets":[{"name":"plasma","data":{"rows":[...] }}, ...]}`. Rows must represent the same samples in the same order in every block. The first two multiset methods accept one-hot `y`; PLS-ROG also requires `d`. The unsupervised method uses only blocks and a block-by-block tau matrix. See [API specification](docs/api.md) for upstream loading-test dimension constraints.
 
 ## Docker
 
@@ -64,7 +68,7 @@ docker build -t loadings-mcp:local .
 docker run --rm -e PORT=8080 -p 8080:8080 loadings-mcp:local
 ```
 
-The image includes compilers, curl/OpenSSL/XML dependencies and the R packages, and runs as an unprivileged user. No runtime package downloads are required. Input is limited to finite numeric matrices: at most 500 rows, 200 columns and 50,000 cells per matrix. Output is limited by `components` and `max_rows`, with truncation metadata. The upstream HTTP layer parses request bodies before tool-level validation; configure ingress/body limits and access controls for production exposure. No input files or arbitrary URLs are accepted, and sample data is not logged by this project.
+The image includes compilers, curl/OpenSSL/XML dependencies and the R packages, and runs as an unprivileged user. No runtime package downloads are required. Input is limited to finite numeric matrices: at most 500 rows, 400 columns and 50,000 cells per matrix. Multiset input allows 2–4 blocks, at most 800 combined variables and 100,000 combined cells. Output is limited by `components` and `max_rows`, with truncation metadata. The upstream HTTP layer parses request bodies before tool-level validation; configure ingress/body limits and access controls for production exposure. No input files or arbitrary URLs are accepted, and sample data is not logged by this project.
 
 ## Google Cloud Run — approval required
 

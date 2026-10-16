@@ -1,5 +1,7 @@
 # Publication status — 2026-10-16
 
+**Update:** the metabolome/multiset enhancement changes the server after the image recorded below. That image and its deployment command draft are historical and must not be deployed as the updated release. Rebuild the current revision and regenerate the image-specific approval plan before deployment. No Cloud Run or IAM approval has been received, and no service has been deployed.
+
 ## GitHub Pages
 
 Published: https://hiroyukiyamamoto.github.io/loadings-mcp/ .
