@@ -41,4 +41,4 @@ The pinned R client's recursive secret-redaction routine can fail on null-valued
 
 [Claude Code](https://code.claude.com/docs/en/mcp): `claude mcp add --transport http NAME URL`.
 [Claude Desktop remote connectors](https://support.claude.com/en/articles/11175166-get-started-with-custom-connectors-using-remote-mcp): connector UI and account permissions apply.
-[ChatGPT](https://help.openai.com/en/articles/12584461-connecting-custom-mcp-servers-in-chatgpt): custom MCP server connection via Plugins where available; account/workspace restrictions apply. Full MCP availability and UI can change. No client is described as already tested beyond the official R client.
+[ChatGPT](https://developers.openai.com/plugins/deploy/connect-chatgpt): custom MCP server connection via Plugins where available; account/workspace restrictions apply. Full MCP availability and UI can change. No client is described as already tested beyond the official R client.

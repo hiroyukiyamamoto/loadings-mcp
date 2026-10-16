@@ -1,0 +1,7 @@
+**
+!Dockerfile
+!.dockerignore
+!R/
+!R/**
+!scripts/
+!scripts/install.R

@@ -1,6 +1,6 @@
 # Validation status
 
-Development date: 2026-10-16 (Asia/Tokyo). No Cloud Run deployment, IAM changes, GitHub Pages settings changes or Pages publication performed.
+Development/publication date: 2026-10-16 (Asia/Tokyo). GitHub Pages is now published under the subsequent explicit publication request. Cloud Run deployment and IAM changes remain pending approval. See [publication status](DEPLOYMENT.md).
 
 Final implementation commit `5b181fd` passed both Linux R and Docker jobs in [GitHub Actions run 38888286171](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38888286171). Later validation-documentation-only commits do not change the tested implementation.
 
@@ -14,15 +14,15 @@ Final implementation commit `5b181fd` passed both Linux R and Docker jobs in [Gi
 | Official MCP client execution | PASS: PCA success, truncation, invalid input, four additional analysis methods |
 | Demo artifacts | PASS: R-generated Iris input/output JSON and score/loading SVG plots |
 | Static site | PASS: section, relative asset/link, viewport and endpoint placeholder checks; JavaScript syntax checked |
-| Visual browser rendering / mobile | UNVERIFIED: no browser automation available; responsive CSS supplied |
+| Visual browser rendering / mobile | PASS on live GitHub Pages using headless Microsoft Edge at desktop 1440×1000 and mobile 390×844: screenshots inspected, no horizontal overflow, images load and anchors resolve |
 | Docker build/runtime | PASS on GitHub Actions Linux: image build, nonroot container startup with PORT=8090 and HTTP MCP initialization. Docker not available locally. |
 | Cloud Run container compatibility | Configuration reviewed against runtime contract: 0.0.0.0, PORT, exec CMD, concurrency 1; deployed runtime UNVERIFIED |
 | Cloud Run external MCP client | UNVERIFIED: deployment requires explicit approval, project/image and authentication decision |
 | ChatGPT / Claude Desktop / Claude Code | Official connection methods documented; manual client tests UNVERIFIED |
-| GitHub Pages deployment | UNVERIFIED: manual workflow ready; publication/settings require explicit approval |
+| GitHub Pages deployment | PASS: switched source to GitHub Actions under publication authorization; run 38910609509 succeeded; live HTML/assets/config/plots/demo JSON/documentation return HTTP 200 |
 
 All R analysis/HTTP checks, artifact generation and static-site checks also passed in Linux CI. Initial CI found missing libuv/zlib development headers in the image and a GitHub API credential problem in the R runner. These were fixed by adding system libraries, verifying installed mcptools during image construction, and downloading the pinned public source archive directly. Both final jobs passed after these corrections.
 
-GitHub independently started legacy `pages-build-deployment` runs on pushes. These were cancelled before publication; repository Pages settings were not changed. Review the existing source setting before future pushes or an approved publication.
+During the initial implementation, legacy Pages runs were cancelled because publication was not yet approved. Under the subsequent publication request, the source was changed to GitHub Actions and the site was successfully published. This supersedes the initial unpublished state; manual `pages.yml` dispatch now controls publication.
 
 Initial installation emitted Windows locale startup warnings and a remotes tar extraction warning, but installation completed and exact pinned versions loaded successfully. These are separate from analysis warnings. Transitive CRAN versions are not fully locked; preserve production image digest for artifact reproducibility.
