@@ -72,6 +72,8 @@ The image includes compilers, curl/OpenSSL/XML dependencies and the R packages, 
 
 ## Google Cloud Run — approval required
 
+The current rollout requires a **dedicated project** and a verified JPY 400 monthly Cloud Run spend cap before deployment. JPY 500/month is a total cost target, not a guaranteed ceiling: enforcement is delayed and Build/Registry/Logging/network charges can remain outside the cap. Budget API activation, project creation/billing association and budgets await approval. See [operations and cost review](OPERATIONS.md) and [current publication status](DEPLOYMENT.md). Anonymous access needs separate final approval after private testing and public request safeguards.
+
 Service: `loadings-mcp`; region: `asia-northeast1`. Prepare an approved Google Cloud project, billing, Artifact Registry repository, Cloud Build/Run APIs and appropriate IAM before these operations. Do not automatically enable services or change public access.
 
 Build and push to your existing approved registry, for example:
@@ -80,12 +82,13 @@ Build and push to your existing approved registry, for example:
 export GOOGLE_CLOUD_PROJECT=YOUR_APPROVED_PROJECT
 export IMAGE=YOUR_APPROVED_REGISTRY_IMAGE_TAG
 export RUNTIME_SERVICE_ACCOUNT=YOUR_APPROVED_RUNTIME_SERVICE_ACCOUNT
+export BILLING_ACCOUNT_ID=YOUR_APPROVED_JPY_BILLING_ACCOUNT
 gcloud builds submit --project "$GOOGLE_CLOUD_PROJECT" --tag "$IMAGE" .
 # Prefer setting IMAGE to the resulting immutable sha256 digest before deployment.
 bash scripts/deploy.sh
 ```
 
-The deployment script requires typing `deploy`, explicitly deploys privately, uses the approved runtime service account, and sets concurrency 1, min instances 0, max instances 1 (both service and revision limits), 1 CPU, 1 GiB memory, request-based CPU allocation and a 120-second timeout. Public invocation requires a separately approved service-level IAM change. Do not change project-wide IAM or other Cloud Run services.
+The deployment script verifies the configured spend cap, requires typing `deploy`, explicitly deploys privately, uses the approved runtime service account, and sets concurrency 1, min instances 0, max instances 1 (both service and revision limits), 1 CPU, 512 MiB memory, request-based CPU allocation and a 30-second timeout. This sizing is an initial candidate, pending Cloud Run measurement. A request timeout does not itself terminate computation. Public invocation requires separately approved safeguards and a service-level IAM change. Do not change other Cloud Run services.
 
 After deployment, get the URL with `gcloud run services describe loadings-mcp --project "$GOOGLE_CLOUD_PROJECT" --region asia-northeast1 --format='value(status.url)'`. Verify tools/list and tools/call using an authenticated MCP client with the actual URL plus `/mcp`. `scripts/smoke-remote.R` supports an existing identity token through an environment variable. A successful deployment alone is not proof of end-to-end client compatibility.
 

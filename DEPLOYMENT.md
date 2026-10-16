@@ -1,69 +1,47 @@
-# Publication status — 2026-10-16
+# Publication status — 2026-10-17
 
-**Current release:** the simpler site and metabolome/multiset extension are published and tested. The image below now contains implementation e0a9279, including all four MCP tools and the real fasting/whhl demos. Cloud Run deployment and IAM changes remain unapproved and have not been performed.
+GitHub Pages is published at https://hiroyukiyamamoto.github.io/loadings-mcp/ . The R MCP server is **not deployed**; `docs/config.json` remains null. No anonymous Cloud Run access has been granted.
 
-## GitHub Pages
+The latest request supersedes the earlier plan to deploy in the shared project. **Use a dedicated project and verify cost protection first.** See [cost-control findings, estimates, pending approvals and emergency procedures](OPERATIONS.md).
 
-Published: https://hiroyukiyamamoto.github.io/loadings-mcp/ .
+## Confirmed
 
-The repository's Pages source was changed from legacy `main:/` to GitHub Actions under the user's publication request. [Deployment run 38914326566](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38914326566) succeeded using the existing `docs/` artifact.
+- GitHub main and the local checkout matched at the start of review (`e249b5a`). Existing analysis code and the loadings package are unchanged.
+- The current gcloud account is authenticated. Current project `stable-century-479407-m7` contains 23 Tokyo Cloud Run services, none named loadings-mcp; no existing service was changed.
+- The open billing account is JPY-denominated. IAM checks confirm permission to create budgets, configure spend caps and link projects. Budget API reads fail with 403 SERVICE_DISABLED; no API was enabled and no budget was created.
+- Official Cloud Billing API documentation supports Cloud Run spend caps and nonnegative JPY amounts. Actual account acceptance/read-back and enforcement are **unverified**.
+- All eight real-demo analyses succeeded in the local measurement script; observed analysis + JSON time 0.12–1.00s, sampled peak RSS up to 165.1 MiB. These are not Cloud Run measurements.
 
-Verified on the live site: HTML, CSS, JS, configuration, all three metabolome SVG plots, demo JSON and documentation return HTTP 200. Headless Microsoft Edge checks passed at 1440×1000 and 390×844, including rendered screenshots, no horizontal overflow, loaded images and valid in-page anchors. The site correctly states that the MCP endpoint is pending; `docs/config.json` remains null.
+## Pending approval
 
-## Google Cloud preparation
+Proposed dedicated project: `loadings-mcp-20261017` (availability unverified). First approve project creation, association with the existing JPY billing account, required APIs, a JPY 400 monthly Run spend cap and JPY 500 project-wide alert budget. The JPY 400 threshold reserves some headroom toward the JPY 500/month goal, but enforcement delays and non-Run charges prevent a strict total guarantee.
 
-Selected current project: `stable-century-479407-m7` (active authenticated owner account). Billing is already linked. Cloud Run, Cloud Build, Artifact Registry and IAM APIs are already enabled; no API activation, billing changes or project-wide IAM changes were performed.
+The deployment script now refuses a shared project and requires a read-back-verified, settled CONFIGURED Run cap <= JPY 400. Candidate private runtime: 1 CPU, 512 MiB, concurrency 1, min 0, service/revision max 1, request billing, 30s timeout. These settings remain undeployed and require Cloud Run sizing tests.
 
-Existing Docker repository: `asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy`. Only the new `loadings-mcp` image is built. The 23 existing Cloud Run services in asia-northeast1 were inspected and left unchanged; no service named loadings-mcp existed at the preflight check.
+Runtime identity, registry/build permissions and private deployment follow approval. Before any anonymous publication, implement/test pre-parser body limits, a computation deadline and bounded request admission; run actual private MCP tests, then obtain separate final public-access approval. A Run timeout alone does not kill computation. Do not replace the absent cap with alerts and silently publish.
 
-Cloud Build: `f877dac5-082d-47f5-95d7-9919f4d6f217`, region asia-northeast1. Source submission is restricted by `.gcloudignore` to the Dockerfile, Docker ignore file, R code and installer; local credentials, R libraries and browser profiles are excluded. The build uses the existing Cloud Build identity and existing source bucket; no permissions were added.
+## Existing validated artifact (historical)
 
-Build result: **SUCCESS**. Immutable image:
+The unchanged metabolome/multiset implementation `e0a9279` passed [Linux R and Docker CI](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38914299181). An earlier approved build in the shared project succeeded: `f877dac5-082d-47f5-95d7-9919f4d6f217`.
 
 ```text
 asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:152a5a0b3a25a50182ed69361db9571e256b0feae97347f0849270323aa39cf9
 ```
 
-Cloud Run deployment and IAM changes are **pending explicit approval**. The planned runtime identity is a dedicated `loadings-mcp-runtime` service account without project roles. The proposal is to create that identity, deploy loadings-mcp privately using an immutable image digest, and (only if approved) grant `allUsers` the `roles/run.invoker` role on this new service.
+This artifact is not deployed and does not include future public transport safeguards. Do not grant cross-project reader roles in the shared project without approval; build the eventual release in the dedicated project. No build was launched in this cost-control review.
 
-Planned limits: service and revision min=0/max=1, concurrency=1, 1 vCPU, 1 GiB RAM, request-based CPU allocation, 120-second request timeout. No existing service is updated.
+## Verification status
 
-### Exact commands awaiting approval
+| Item | Status |
+| --- | --- |
+| Official website | Public; latest reference/design publication succeeded |
+| Cloud Run / endpoint | Not created; endpoint unknown |
+| Spend cap / project alert | Prepared, not created; API activation and project approval required |
+| Cost gate tests | Local PASS; rejects alert-only, wrong scope/currency, inactive/unsettled/excessive caps |
+| R demo benchmark | All 8 methods PASS locally; sampled Windows metrics only |
+| Cloud Run initialize / tools / analyses | Unverified until private deployment |
+| ChatGPT / Claude manual connection | Unverified |
+| Public request/body/time protection | Not implemented; blocks anonymous rollout |
+| Emergency stop | Runbook prepared; not executed against a live service |
 
-These commands have **not** been executed. Creation of the dedicated identity and the new service's IAM changes require approval. No project roles are granted to the runtime identity.
-
-```sh
-export GOOGLE_CLOUD_PROJECT=stable-century-479407-m7
-export IMAGE=asia-northeast1-docker.pkg.dev/stable-century-479407-m7/cloud-run-source-deploy/loadings-mcp@sha256:152a5a0b3a25a50182ed69361db9571e256b0feae97347f0849270323aa39cf9
-export RUNTIME_SERVICE_ACCOUNT=loadings-mcp-runtime@stable-century-479407-m7.iam.gserviceaccount.com
-
-gcloud iam service-accounts create loadings-mcp-runtime \
-  --project "$GOOGLE_CLOUD_PROJECT" --display-name='loadings MCP runtime'
-
-# The existing scripts/deploy.sh will execute this command after confirmation:
-gcloud run deploy loadings-mcp --project "$GOOGLE_CLOUD_PROJECT" --region asia-northeast1 \
-  --image "$IMAGE" --service-account "$RUNTIME_SERVICE_ACCOUNT" --no-allow-unauthenticated \
-  --port 8080 --concurrency 1 --cpu 1 --memory 1Gi --cpu-throttling --timeout 120 \
-  --min 0 --max 1 --min-instances 0 --max-instances 1
-
-# Only after the private deployment passes authenticated MCP tests:
-gcloud run services add-iam-policy-binding loadings-mcp \
-  --project "$GOOGLE_CLOUD_PROJECT" --region asia-northeast1 \
-  --member=allUsers --role=roles/run.invoker
-```
-
-After the final command, repeat the MCP tests anonymously. Only on success set `docs/config.json` to the actual /mcp URL and publish the updated site. Re-check that the service name is unused immediately before creating the service; stop if another deployment has appeared.
-
-## Security and operational limits
-
-The proposed public mode is anonymous HTTPS for a bounded computation service, with no OAuth or API key at the application layer. Arbitrary R execution/session tools are disabled; numeric input and output dimensions are limited. The dedicated runtime identity has no project roles and is not given data-store access.
-
-Maximum instances and concurrency reduce capacity and cost exposure; they are not per-IP rate limiting, complete DoS protection, or a guaranteed spending cap. The upstream transport parses request bodies before analysis input validation. A public attacker can still consume the one instance or send oversized requests. Per-user authentication, a rate-limiting gateway or a load balancer/Cloud Armor would require additional design, permissions and possibly cost; none is silently provisioned here.
-
-Build execution, image storage, requests and data transfer may incur charges even with min=0. Existing billing settings were not changed. No load test is performed against this project.
-
-## Connection validation
-
-Pending a deployed endpoint. `scripts/smoke-remote.R` will check explicit MCP initialization, official mcptools discovery, demo_data, PCA, all four analyze_model methods, all three analyze_multiset methods, and an invalid input. It accepts optional Cloud Run credentials only via `CLOUD_RUN_ID_TOKEN`; output never includes that token.
-
-Claude Code was not found on the local PATH; no Claude Code/Claude Desktop/ChatGPT connection success is claimed. The [official ChatGPT connection guide](https://developers.openai.com/plugins/deploy/connect-chatgpt) was rechecked: connect a reachable HTTPS /mcp endpoint via Plugins → Add custom MCP server, subject to account/workspace permissions and matching authentication.
+Only after public deployment approval and successful anonymous MCP tests should the actual HTTPS `/mcp` URL and free best-effort service terms be published on Pages.

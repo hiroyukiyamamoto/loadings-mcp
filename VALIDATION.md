@@ -1,5 +1,7 @@
 # Validation status
 
+Cost-control review, 2026-10-17: no new Cloud Run deployment, API activation, budget or IAM change was performed. The new spend-cap gate tests pass locally and all eight packaged-demo benchmarks succeed (Windows RSS sampling, not Cloud Run sizing). `scripts/deploy.sh` now requires a dedicated project and settled configured cap <= JPY 400; its 512 MiB/30s private-runtime candidate remains unverified. Budget API access returns 403 SERVICE_DISABLED, so account-level cap creation/read-back and costs remain unverified. See [operations review](OPERATIONS.md); this supersedes the old shared-project rollout plan. R analysis/transport code is unchanged, and existing successful implementation checks remain valid.
+
 Development/publication date: 2026-10-16 (Asia/Tokyo). GitHub Pages is now published under the subsequent explicit publication request. Cloud Run deployment and IAM changes remain pending approval. See [publication status](DEPLOYMENT.md).
 
 Final implementation commit `5b181fd` passed both Linux R and Docker jobs in [GitHub Actions run 38888286171](https://github.com/hiroyukiyamamoto/loadings-mcp/actions/runs/38888286171). Later validation-documentation-only commits do not change the tested implementation.
