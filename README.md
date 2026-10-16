@@ -74,7 +74,7 @@ The image includes compilers, curl/OpenSSL/XML dependencies and the R packages, 
 
 ## Google Cloud Run — approval required
 
-The user approved retaining project `stable-century-479407-m7`, including the impact on all 23 existing Run services. A JPY 400 monthly Cloud Run spend cap is now CONFIGURED and a separate JPY 500 project-wide alerts-only budget exists. Existing service usage counts toward the cap. JPY 500/month is a target, not a guaranteed ceiling: enforcement is delayed and Build/Registry/Logging/network charges can remain outside the cap. The script requires a freshly verified cap and `APPROVE_SHARED_PROJECT=stable-century-479407-m7` for this acknowledged exception. Runtime identity/private deployment and final anonymous access still await approval. See [operations and cost review](OPERATIONS.md) and [current publication status](DEPLOYMENT.md).
+The user approved retaining project `stable-century-479407-m7`, including the impact on all 23 existing Run services. A JPY 400 monthly Cloud Run spend cap is now CONFIGURED and a separate JPY 500 project-wide alerts-only budget exists. Existing service usage counts toward the cap. JPY 500/month is a target, not a guaranteed ceiling: enforcement is delayed and Build/Registry/Logging/network charges can remain outside the cap. The script requires a freshly verified cap and `APPROVE_SHARED_PROJECT=stable-century-479407-m7` for this acknowledged exception. The role-free runtime identity and private deployment are complete; authenticated tests pass. Final anonymous access still awaits safeguards and approval. See [operations and cost review](OPERATIONS.md) and [current publication status](DEPLOYMENT.md).
 
 Service: `loadings-mcp`; region: `asia-northeast1`. Prepare an approved Google Cloud project, billing, Artifact Registry repository, Cloud Build/Run APIs and appropriate IAM before these operations. Do not automatically enable services or change public access.
 
@@ -92,13 +92,13 @@ gcloud builds submit --project "$GOOGLE_CLOUD_PROJECT" --tag "$IMAGE" .
 bash scripts/deploy.sh
 ```
 
-The deployment script verifies the configured spend cap, requires typing `deploy`, explicitly deploys privately, uses the approved runtime service account, and sets concurrency 1, min instances 0, max instances 1 (both service and revision limits), 1 CPU, 512 MiB memory, request-based CPU allocation and a 30-second timeout. This sizing is an initial candidate, pending Cloud Run measurement. A request timeout does not itself terminate computation. Public invocation requires separately approved safeguards and a service-level IAM change. Do not change other Cloud Run services.
+The deployment script verifies the configured spend cap, requires typing `deploy`, explicitly deploys privately, uses the approved runtime service account, and sets concurrency 1, min instances 0, max instances 1 (both service and revision limits), 1 CPU, 512 MiB memory, request-based CPU allocation and a 30-second timeout. This sizing passed packaged-demo tests on Cloud Run; maximum-size input and worst-case memory remain unverified. A request timeout does not itself terminate computation. Public invocation requires separately approved safeguards and a service-level IAM change. Do not change other Cloud Run services.
 
 After deployment, get the URL with `gcloud run services describe loadings-mcp --project "$GOOGLE_CLOUD_PROJECT" --region asia-northeast1 --format='value(status.url)'`. Verify tools/list and tools/call using an authenticated MCP client with the actual URL plus `/mcp`. `scripts/smoke-remote.R` supports an existing identity token through an environment variable. A successful deployment alone is not proof of end-to-end client compatibility.
 
 ## GitHub Pages
 
-The static English site lives in `docs/`, with no build framework. Its MCP URL is controlled only by `docs/config.json`; `null` renders an honest pending-deployment message. After actual deployment and connectivity verification, replace null with the verified HTTPS `/mcp` endpoint and commit.
+The static English site lives in `docs/`, with no build framework. Its MCP URL is controlled only by `docs/config.json`; `null` keeps the public connection unavailable; the current page explains that private validation has passed. After actual deployment and connectivity verification, replace null with the verified HTTPS `/mcp` endpoint and commit.
 
 Pages is configured with **GitHub Actions** as its source following explicit publication authorization on 2026-10-16. The published site uses `docs/`. To publish subsequent approved changes, manually run **Publish GitHub Pages (manual approval required)**. This supplied workflow has no push trigger; it replaces the legacy branch-based deployment. Public URL: https://hiroyukiyamamoto.github.io/loadings-mcp/ . Preview locally with any static HTTP server rooted at `docs/` (the configuration uses fetch).
 
